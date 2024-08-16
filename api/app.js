@@ -177,7 +177,7 @@ function predictSpeed(goalDate, goalNumber, currentNumber) {
 	let daysRemaining
 	if (timeRemaining >= 0) {
 		daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
-	else {
+	} else {
 		daysRemaining = math.floor(timeRemaining / (1000 * 60 * 60 * 24));
 	}
 	let neededSpeed = (goalNumber - currentNumber) / Math.abs(daysRemaining);
