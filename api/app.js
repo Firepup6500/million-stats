@@ -173,9 +173,14 @@ async function report() {
 function predictSpeed(goalDate, goalNumber, currentNumber) {
 	let today = new Date();
 	let goal = new Date(goalDate);
-	let timeRemaining = Math.abs(goal - today);
-	let daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
-	let neededSpeed = (goalNumber - currentNumber) / daysRemaining;
+	let timeRemaining = goal - today;
+	let daysRemaining
+	if (timeRemaining >= 0) {
+		daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
+	else {
+		daysRemaining = math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+	}
+	let neededSpeed = (goalNumber - currentNumber) / Math.abs(daysRemaining);
 	return [daysRemaining, neededSpeed];
 
 }
