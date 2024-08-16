@@ -24,7 +24,7 @@ const app = new App({
 });
 
 function extractNumber(txt) {
-	let array = ["\n", " ", "-"]
+	let array = ["-", " ", "\n"]
 	for (let i of array) {
 		if (txt.includes(i)) {
 			return txt.split(i)[0]
