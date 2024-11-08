@@ -15,7 +15,7 @@ const token = process.env.SLACK_BOT_TOKEN;
 const channel = process.env.SLACK_MILLION_CHANNEL;
 const port = process.env.PORT ?? 3000;
 
-const goalDate = '11/1/2024';
+const goalDate = '2/1/2025';
 const goalNumber = 300000;
 
 const app = new App({
