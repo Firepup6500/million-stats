@@ -29,15 +29,15 @@ function addQuotes(message, rawGoals, rawSpeed) {
 	let diff = goals - speed;
 	if (goals <= 0) {
 		end = `:tada: YOU DID IT, MY LOYAL SERVANTS! YOU'VE REACHED OUR GOAL ON TIME! :tada: But there's still loads of time before we reach a million-- let's keep up the pace!`
-	} else if (diff < 10 && days > 0) {
+	} else if (diff < 10 && days > -1) {
 		end = `You're doing well, my lackeys! Keep up that speed of at least *+${speed}* if you want to reach that goal! You have *${days}* days remaining to get there!`
-	} else if (diff > 10 && diff < 1000 && days > 0) {
+	} else if (diff > 10 && diff < 1000 && days > -1) {
 		end = `Still room to improve your performance, my underlings-- you're only at *${speed}* a day! Get that speed up to at least *+${goals}* to get there on time! You have *${days}* days left!`
-	} else if (diff > 1000 && days > 0) {
+	} else if (diff > 1000 && days > -1) {
 		end = `You're slogging behind, my minions! Only *${speed}* a day? RiDONKulous! Get that speed up to at least *+${goals}* to get there on time! Hurry up!!! You have *${days}* days left to get there!`
-	} else if (days == 0) {
+	} else if (days == -1) {
 		end = `Today's the deadline my minions! I hope you can count at least *+${goals}* today, otherwise we'll miss the deadline!`
-	} else if (days < 0) {
+	} else if (days < -1) {
 		end = `We've missed the deadline by ${Math.abs(days)} day${(days < -1)? 's': ''} my underlings-- I hope you can make the next one. In the meantime, I recommend counting *+${goals}* numbers today.`
 	}
 	return start + "\n" + message + "\n" + end;
