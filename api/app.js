@@ -150,7 +150,7 @@ async function report() {
 		"increase": diff,
 		"start": oldest,
 	})
-	let averageSpeed = await getAverage();
+	let averageSpeed = Math.max(0, await getAverage());
 	let pastThousandsGoal = Math.floor(latest / 1000) * 1000;
 	let goals = predictSpeed(goalDate, goalNumber, latest);
 	let message =
