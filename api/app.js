@@ -15,8 +15,8 @@ const token = process.env.SLACK_BOT_TOKEN;
 const channel = process.env.SLACK_MILLION_CHANNEL;
 const port = process.env.PORT ?? 3000;
 
-const goalDate = '2/1/2025';
-const goalNumber = 300000;
+const goalDate = '6/1/2027';
+const goalNumber = 400000;
 
 const app = new App({
 	token: token,
@@ -25,11 +25,13 @@ const app = new App({
 
 function extractNumber(txt) {
 	let array = ["-", " ", "\n"]
+	let lowestIndex = Infinity;
 	for (let i of array) {
 		if (txt.includes(i)) {
-			return txt.split(i)[0]
+			lowestIndex = Math.min(lowestIndex, txt.indexOf(i));
 		}
 	}
+	if (lowestIndex !== Infinity) return txt.slice(0, lowestIndex);
 	return txt;
 }
 
@@ -190,6 +192,7 @@ app.event('message', async (body) => {
 		let e = body.event;
 		if (typeof e.subtype === "undefined" && /\d/.test(e.text[0])) {
 			let number = extractNumber(e.text);
+			if (isNaN(number)) return;
 			let ts = e.ts;
 			let c = e.channel;
 			if (number % 1000 === 0) {
@@ -216,7 +219,7 @@ app.event('app_mention', async (body) => {
 	try {
 		let e = body.event;
 		let c = e.channel;
-		let choose = Math.floor(Math.random() * 8);
+		let choose = Math.floor(Math.random() * 7);
 		let messageArray = [
 			"DO NOT BOTHER ME. I AM SLEEPING.",
 			"AAAAAAAA!!! THE SUN! *pulls curtains closed* I nearly got _burnt_ that time, you pathetic little minions! Next time, DO NOT WAKE ME.",
@@ -226,7 +229,7 @@ app.event('app_mention', async (body) => {
 			"HISSSSSSSSSSS!",
 			"Minions, I had _three hours_ of sleep yesterday, and I am trying to catch up. Please, _leave me alone to sleep._",
 		];
-		
+
 		publishMessage(c, messageArray[choose]);
 
 		console.log("App mentioned.");
