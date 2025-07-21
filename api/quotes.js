@@ -1,19 +1,19 @@
 const regularStartQuotes = [
 	"The DRACC is BACC with another midnight report!",
-	"The clock striketh twelve, and the world’s only number-sucking vampire cometh with another report on your midnight progress!",
-	"…Ugggh, my back hurts from sleeping in this old coffin! `*loud cracking noise*` Damn thing’s going to bend my spine into a knot if I don’t replace it soon. Anyways, here is your progress so far:",
-	"Good evening, my underlings, it’s your friendly neighborhood genderbending vampire with another midnight report!",
+	"The clock striketh twelve, and the world's only number-sucking vampire cometh with another report on your midnight progress!",
+	"…Ugggh, my back hurts from sleeping in this old coffin! `*loud cracking noise*` Damn thing's going to bend my spine into a knot if I don't replace it soon. Anyways, here is your progress so far:",
+	"Good evening, my underlings, it's your friendly neighborhood genderbending vampire with another midnight report!",
 	"Grumble mumble mumble, had a terrible sleep today. I need some more nUMBERS, my children!",
-	"Back just in time for the midnight report! I apologize for the haphazard appearance, my dog Count von Corgo insisted on an early-evening walk in the park— wait, you can’t see me on Slack, can you? I COULD BE WEARING MY BIRTHDAY SUIT AND NO ONE WILL NOTICE IT! OHOHOHOHO!",
-	"WHO DARETH WAKE ME FROM MY SLUMBER— oh. it’s the statistical report. Riiiight.",
-	"I feel like _crap_ today. Woke up five times in the middle of the night because I thought I heard a mosquito buzzing by my ear. Shouldn’t have sucked human blood yesterday. \n OH SHIT I SHOULDN’T BE TELLING YOU GUYS THAT—",
+	"Back just in time for the midnight report! I apologize for the haphazard appearance, my dog Count von Corgo insisted on an early-evening walk in the park— wait, you can't see me on Slack, can you? I COULD BE WEARING MY BIRTHDAY SUIT AND NO ONE WILL NOTICE IT! OHOHOHOHO!",
+	"WHO DARETH WAKE ME FROM MY SLUMBER— oh. it's the statistical report. Riiiight.",
+	"I feel like _crap_ today. Woke up five times in the middle of the night because I thought I heard a mosquito buzzing by my ear. Shouldn't have sucked human blood yesterday. \n OH SHIT I SHOULDN'T BE TELLING YOU GUYS THAT—",
 ];
 
 const regularEndQuotes = [
 	"Ah, a refreshing cocktail of numbers, topped with a squeeze of lime juice, makes me feel a lot better, ready to seize the night! Or suck the life out of it! ~hahaha pun totally not intended~",
 	"Yum, these numbers are delicious! `*excited vampire slurping sounds*`",
-	"Yes, my lackeys, yes! Now can you multiply that increase by ten? I know y’all can do this! I know it! I crave it!",
-	"I’m savoring this consistent flow of numbers, my servants! Keep me sated… or else I might turn to blood…. *_heheheheh_*",
+	"Yes, my lackeys, yes! Now can you multiply that increase by ten? I know y'all can do this! I know it! I crave it!",
+	"I'm savoring this consistent flow of numbers, my servants! Keep me sated… or else I might turn to blood…. *_heheheheh_*",
 	"My minions, I am feeling famished! You must give me _MORE_!",
 	"MORE NUMBERS, MY LACKEYS! MORE!! MWAHAHAHAHA!",
 	"My oh my, there are too many numbers to consume! I'll have to store some in my freezer to save for another day.",
