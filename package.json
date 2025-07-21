@@ -1,7 +1,7 @@
 {
-	"name": "bolt-app-template",
+	"name": "million-stats",
 	"version": "0.0.1",
-	"description": "A basic template to spin up a Bolt app for Slack",
+	"description": "Try to count to a million in slack!",
 	"main": "api/app.js",
 	"scripts": {
 		"start": "node api/app.js"
@@ -17,7 +17,7 @@
 		"node": "20.x"
 	},
 	"repository": {
-		"url": "https://glitch.com/edit/#!/bolt-app-template"
+		"url": "https://git.hackclub.app/firepup650/million-stats"
 	},
 	"license": "MIT",
 	"keywords": [
