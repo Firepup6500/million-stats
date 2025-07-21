@@ -1,27 +1,30 @@
 {
-  "name": "bolt-app-template",
-  "version": "0.0.1",
-  "description": "A basic template to spin up a Bolt app for Slack",
-  "main": "api/app.js",
-  "scripts": {
-    "start": "node api/app.js"
-  },
-  "dependencies": {
-    "@slack/bolt": "^3.22.0",
-    "airtable": "^0.11.0",
-    "dotenv": "^16.3.1",
-    "moment": "^2.29.1",
-    "node-schedule": "^2.0.0"
-  },
-  "engines": {
-    "node": "20.x"
-  },
-  "repository": {
-    "url": "https://glitch.com/edit/#!/bolt-app-template"
-  },
-  "license": "MIT",
-  "keywords": [
-    "node",
-    "express"
-  ]
+	"name": "bolt-app-template",
+	"version": "0.0.1",
+	"description": "A basic template to spin up a Bolt app for Slack",
+	"main": "api/app.js",
+	"scripts": {
+		"start": "node api/app.js"
+	},
+	"dependencies": {
+		"@slack/bolt": "^3.22.0",
+		"airtable": "^0.11.0",
+		"dotenv": "^16.3.1",
+		"moment": "^2.29.1",
+		"node-schedule": "^2.0.0"
+	},
+	"engines": {
+		"node": "20.x"
+	},
+	"repository": {
+		"url": "https://glitch.com/edit/#!/bolt-app-template"
+	},
+	"license": "MIT",
+	"keywords": [
+		"node",
+		"express"
+	],
+	"devDependencies": {
+		"@biomejs/biome": "2.1.2"
+	}
 }
