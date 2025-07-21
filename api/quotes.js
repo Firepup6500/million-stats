@@ -28,7 +28,7 @@ const regularEndQuotes = [
  * @param {number} rawSpeed the raw current average speed
  * @returns the new message with the added quote
  */
-export function addQuote(message, daysRemaining, predictedSpeed, rawSpeed) {
+function addQuote(message, daysRemaining, predictedSpeed, rawSpeed) {
 	const start =
 		regularStartQuotes[Math.floor(Math.random() * regularStartQuotes.length)];
 
@@ -55,3 +55,5 @@ export function addQuote(message, daysRemaining, predictedSpeed, rawSpeed) {
 
 	return `${start}\n${message}\n${end}`;
 }
+
+module.exports = { addQuote };

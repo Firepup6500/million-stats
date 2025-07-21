@@ -1,11 +1,10 @@
-import { App } from "@slack/bolt";
-import { base as _base, configure } from "airtable";
-import dotenv from "dotenv";
-import { DateTime } from "luxon";
-import { scheduleJob } from "node-schedule";
-import { addQuote } from "./quotes.js";
+const { App } = require("@slack/bolt");
+const { base: _base, configure } = require("airtable");
+const { DateTime } = require("luxon");
+const { scheduleJob } = require("node-schedule");
+const { addQuote } = require("./quotes.js");
 
-dotenv.config();
+require("dotenv").config();
 
 configure({
 	endpointUrl: "https://api.airtable.com",
@@ -427,33 +426,35 @@ app.event("app_mention", async (body) => {
 	}
 });
 
-try {
-	const lvRecord = await getData("misc", "{Name} = 'lastValid'");
-	if (lvRecord) {
-		// @ts-expect-error lastValid is always a number, unless the table was somehow setup incorrectly. Skill issue tbh
-		lastValid = lvRecord.fields.Number;
-		// @ts-expect-error lastCounter is always a string. Ditto.
-		lastCounter = lvRecord.fields.UserId;
-	} else {
-		addData("misc", {
-			Name: "lastValid",
-			Number: 0,
-			UserId: "",
-		});
+(async () => {
+	try {
+		const lvRecord = await getData("misc", "{Name} = 'lastValid'");
+		if (lvRecord) {
+			// @ts-expect-error lastValid is always a number, unless the table was somehow setup incorrectly. Skill issue tbh
+			lastValid = lvRecord.fields.Number;
+			// @ts-expect-error lastCounter is always a string. Ditto.
+			lastCounter = lvRecord.fields.UserId;
+		} else {
+			addData("misc", {
+				Name: "lastValid",
+				Number: 0,
+				UserId: "",
+			});
+		}
+		const stRecord = await getData("misc", "{Name} = 'startToday'");
+		if (stRecord) {
+			// @ts-expect-error startToday is always a number. Ditto.
+			startToday = stRecord.fields.Number;
+		} else {
+			addData("misc", {
+				Name: "startToday",
+				Number: 0,
+			});
+		}
+		await app.start(port);
+		scheduleJob("0 0 * * *", report);
+		console.log(`Started bot, listening on port ${port}`);
+	} catch (error) {
+		console.error(error);
 	}
-	const stRecord = await getData("misc", "{Name} = 'startToday'");
-	if (stRecord) {
-		// @ts-expect-error startToday is always a number. Ditto.
-		startToday = stRecord.fields.Number;
-	} else {
-		addData("misc", {
-			Name: "startToday",
-			Number: 0,
-		});
-	}
-	await app.start(port);
-	scheduleJob("0 0 * * *", report);
-	console.log(`Started bot, listening on port ${port}`);
-} catch (error) {
-	console.error(error);
-}
+})();
