@@ -20,7 +20,7 @@ const regularEndQuotes = [
 	"Someone by the name of Orpheus has told me that these numbers go well with a mint chocolate chip sundae! I'll have to try that one day. Unfortunately, the nearest supermarket is two hours away and I'm too lazy to fly there...",
 ];
 
-function addQuotes(message, rawGoals, rawSpeed) {
+export function addQuotes(message, rawGoals, rawSpeed) {
 	const start =
 		regularStartQuotes[Math.floor(Math.random() * regularStartQuotes.length)];
 	let end =
@@ -44,5 +44,3 @@ function addQuotes(message, rawGoals, rawSpeed) {
 	}
 	return start + "\n" + message + "\n" + end;
 }
-
-module.exports = addQuotes;

@@ -1,15 +1,17 @@
-const { App } = require("@slack/bolt");
-const addQuotes = require("./quotes.js");
-const schedule = require("node-schedule");
-const moment = require("moment");
-const Airtable = require("airtable");
-require("dotenv").config();
+import { App } from "@slack/bolt";
+import { base as _base, configure } from "airtable";
+import dotenv from "dotenv";
+import moment from "moment";
+import { scheduleJob } from "node-schedule";
+import { addQuotes } from "./quotes.js";
 
-Airtable.configure({
+dotenv.config();
+
+configure({
 	endpointUrl: "https://api.airtable.com",
 	apiKey: process.env.AIRTABLE_API_KEY,
 });
-const base = Airtable.base(process.env.AIRTABLE_BASE_ID);
+const base = _base(process.env.AIRTABLE_BASE_ID);
 
 const token = process.env.SLACK_BOT_TOKEN;
 const channel = process.env.SLACK_MILLION_CHANNEL;
@@ -359,7 +361,7 @@ app.event("app_mention", async (body) => {
 			});
 		}
 		await app.start(port);
-		schedule.scheduleJob("0 0 * * *", report);
+		scheduleJob("0 0 * * *", report);
 		console.log(`Started bot, listening on port ${port}`);
 	} catch (error) {
 		console.error(error);

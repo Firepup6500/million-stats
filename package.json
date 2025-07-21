@@ -2,6 +2,7 @@
 	"name": "million-stats",
 	"version": "0.0.1",
 	"description": "Try to count to a million in slack!",
+	"type": "module",
 	"main": "api/app.js",
 	"scripts": {
 		"start": "node api/app.js"
