@@ -207,7 +207,7 @@ async function report() {
 		`Today we've went from *${oldest}* to *${latest}*!
 		- :arrow_upper_right: The day's progress: *+${diff}*
 		- :chart_with_upwards_trend: Average daily speed: *${Math.round(averageSpeed)}*
-		- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${moment(goalDate).format('MMMM D')}.*
+		- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${moment(goalDate).format('MMMM DD, YYYY')}.*
 		- :calendar: If we want to get there on time, we need to count by at least *+${Math.ceil(goals[1])}* a day.
 		- :1234: Here's a number to aim for today: *${Math.ceil(parseInt(latest) + parseInt(goals[1]))}*`;
 	if (pastThousandsGoal > oldest && pastThousandsGoal <= latest) {
