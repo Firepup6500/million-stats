@@ -31,14 +31,14 @@ const app = new App({
 		{
 			path: "/health-check",
 			method: ["GET"],
-			handler: (req, res) => {
+			handler: (_req, res) => {
 				res.end("OK");
 			},
 		},
 		{
 			path: "/api/currentNumber",
 			method: ["GET"],
-			handler: (req, res) => {
+			handler: (_req, res) => {
 				res.setHeader("Content-Type", "application/json");
 				res.end(`{"number":${lastValid}}`);
 			},
@@ -69,7 +69,7 @@ async function fetchLatest(id) {
 		for (let x = 0; x < result.messages.length; x++) {
 			number = extractNumber(result.messages[x].text);
 
-			if (!isNaN(number)) break;
+			if (!Number.isNaN(Number(number))) break;
 		}
 		return number;
 	} catch (error) {
@@ -89,7 +89,7 @@ async function fetchOldest(id) {
 		for (let x = result.messages.length - 2; x >= 0; x--) {
 			number = extractNumber(result.messages[x].text);
 
-			if (!isNaN(number)) break;
+			if (!Number.isNaN(Number(number))) break;
 		}
 		return number - 1;
 	} catch (error) {
@@ -148,7 +148,7 @@ async function pinMessage(id, ts) {
 }
 
 async function addData(db, object) {
-	base(db).create(object, (err, record) => {
+	base(db).create(object, (err, _record) => {
 		if (err) {
 			console.error(err);
 			return;
@@ -195,7 +195,9 @@ async function getAverage() {
 			.firstPage();
 
 		let sum = 0;
-		obj.forEach((item) => (sum += item.fields.increase));
+		obj.forEach((item) => {
+			sum += item.fields.increase;
+		});
 
 		return sum / obj.length;
 	} catch (error) {
@@ -260,7 +262,7 @@ app.event("message", async (body) => {
 		const e = body.event;
 		if (typeof e.subtype === "undefined" && /\d/.test(e.text[0])) {
 			const number = extractNumber(e.text);
-			if (isNaN(number)) return;
+			if (Number.isNaN(Number(number))) return;
 			const ts = e.ts;
 			const c = e.channel;
 			const u = e.user;

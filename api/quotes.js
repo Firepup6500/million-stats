@@ -20,15 +20,25 @@ const regularEndQuotes = [
 	"Someone by the name of Orpheus has told me that these numbers go well with a mint chocolate chip sundae! I'll have to try that one day. Unfortunately, the nearest supermarket is two hours away and I'm too lazy to fly there...",
 ];
 
+/**
+ * Computes and creates a quote message about the progress to a million
+ * @param {string} message
+ * @param {string[]} rawGoals
+ * @param {string[]} rawSpeed
+ * @returns
+ */
 export function addQuotes(message, rawGoals, rawSpeed) {
 	const start =
 		regularStartQuotes[Math.floor(Math.random() * regularStartQuotes.length)];
+
 	let end =
 		regularEndQuotes[Math.floor(Math.random() * regularEndQuotes.length)];
+
 	const goals = Math.ceil(rawGoals[1]);
 	const days = rawGoals[0];
 	const speed = Math.round(rawSpeed);
 	const diff = goals - speed;
+
 	if (goals <= 0) {
 		end = `:tada: YOU DID IT, MY LOYAL SERVANTS! YOU'VE REACHED OUR GOAL ON TIME! :tada: But there's still loads of time before we reach a million-- let's keep up the pace!`;
 	} else if (diff < 10 && days > -1) {
@@ -37,10 +47,11 @@ export function addQuotes(message, rawGoals, rawSpeed) {
 		end = `Still room to improve your performance, my underlings-- you're only at *${speed}* a day! Get that speed up to at least *+${goals}* to get there on time! You have *${days}* days left!`;
 	} else if (diff > 1000 && days > -1) {
 		end = `You're slogging behind, my minions! Only *${speed}* a day? RiDONKulous! Get that speed up to at least *+${goals}* to get there on time! Hurry up!!! You have *${days}* days left to get there!`;
-	} else if (days == -1) {
+	} else if (days === -1) {
 		end = `Today's the deadline my minions! I hope you can count at least *+${goals}* today, otherwise we'll miss the deadline!`;
 	} else if (days < -1) {
 		end = `We've missed the deadline by ${Math.abs(days)} day${days < -1 ? "s" : ""} my underlings-- I hope you can make the next one. In the meantime, I recommend counting *+${goals}* numbers today.`;
 	}
-	return start + "\n" + message + "\n" + end;
+
+	return `${start}\n${message}\n${end}`;
 }
