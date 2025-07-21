@@ -10,11 +10,14 @@ Every midnight, the bot gives a report on the progress the channel's made and th
 - `app.js` contains the primary Bolt app. It imports the Bolt package (`@slack/bolt`) and starts the Bolt app's server.
 - `.env` is where you'll put your [Slack app's authorization token and signing secret](https://slack.dev/bolt-js/tutorial/getting-started#tokens-and-installing-apps) and your [Airtable API key](https://support.airtable.com/hc/en-us/articles/219046777-How-do-I-get-my-API-key-).
 
+You can format your code with `npx @biomejs/biome check --write`.
+
 ## Packages used
 
-- [moment.js](https://momentjs.com/)
+- [luxon](https://moment.github.io/luxon/)
 - [node-schedule](https://www.npmjs.com/package/node-schedule)
 - [Slack's Bolt API](https://slack.dev/bolt-js/tutorial/getting-started)
 - [Airtable](https://airtable.com/api)
+- [Biome](https://biomejs.dev/)
 
 \ ゜ o ゜)ノ
