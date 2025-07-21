@@ -267,7 +267,7 @@ app.event('message', async (body) => {
 			let reacted = false;
 			if (u === lastCounter) {
 				postReaction(c, "bangbang", ts);
-				publishEphemeral(channel, `THIS IS A TEST PLEASE IGNORE: You can't count twice in a row, minion.`, u);
+				publishEphemeral(channel, `You can't count twice in a row, minion.`, u);
 			} else if (Number(number) === nextNumber) {
 				await setData("misc", "Name", "lastValid", {
 					"Name": "lastValid",
@@ -300,7 +300,7 @@ app.event('message', async (body) => {
 				}
 			} else {
 				postReaction(c, "bangbang", ts);
-				publishEphemeral(channel, `THIS IS A TEST PLEASE IGNORE: That's the wrong number, minion, it should be *${nextNumber}.*`, u);
+				publishEphemeral(channel, `That's the wrong number, minion, it should be *${nextNumber}.*`, u);
 			}
 		}
 	} catch (err) {
