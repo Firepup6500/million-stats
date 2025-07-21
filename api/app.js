@@ -1,7 +1,7 @@
 import { App } from "@slack/bolt";
 import { base as _base, configure } from "airtable";
 import dotenv from "dotenv";
-import moment from "moment";
+import { DateTime } from "luxon";
 import { scheduleJob } from "node-schedule";
 import { addQuote } from "./quotes.js";
 
@@ -260,7 +260,7 @@ async function report() {
 	const diff = latest - oldest;
 
 	await addData("increase", {
-		Date: moment().subtract(1, "days").format("YYYY-MM-DD"),
+		Date: DateTime.now().minus({ days: 1 }).toFormat("YYYY-MM-DD"),
 		increase: diff,
 		start: startToday,
 	});
@@ -283,7 +283,7 @@ async function report() {
 	const message = `Today we've went from *${oldest}* to *${latest}*!
 		- :arrow_upper_right: The day's progress: *+${diff}*
 		- :chart_with_upwards_trend: Average daily speed: *${Math.round(averageSpeed)}*
-		- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${moment(goalDate).format("MMMM DD, YYYY")}.*
+		- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${DateTime.fromJSDate(goalDate).toFormat("MMMM DD, YYYY")}.*
 		- :calendar: If we want to get there on time, we need to count by at least *+${Math.ceil(predictedSpeed)}* a day.
 		- :1234: Here's a number to aim for today: *${Math.ceil(latest + predictedSpeed)}*`;
 	if (pastThousandsGoal > oldest && pastThousandsGoal <= latest) {
