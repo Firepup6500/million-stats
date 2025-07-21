@@ -19,6 +19,7 @@ const goalDate = '6/1/2027';
 const goalNumber = 400000;
 
 let lastValid = 0;
+let lastCounter = "";
 let dayStart = 0;
 
 const app = new App({
@@ -157,6 +158,20 @@ async function addData(db, object) {
 	})
 }
 
+async function setData(db, fieldName, fieldValue, object) {
+	try {
+		const record = await getData(db, `{${fieldName}} = '${fieldValue}'`);
+		if (!!record) {
+			await base(db).update(record.id, object);
+		} else {
+			if (!object[fieldName]) object[fieldName] = fieldValue;
+			await addData(db, object);
+		}
+	} catch (err) {
+		console.error(err);
+	}
+}
+
 async function getData(db, filterFormula) {
 	try {
 		const obj = await base(db)
@@ -192,14 +207,18 @@ async function getAverage() {
 
 async function report() {
 	console.log("Writing daily report...");
-	let oldest = await fetchOldest(channel);
-	let latest = await fetchLatest(channel);
+	let oldest = startToday; // await fetchOldest(channel);
+	let latest = lastValid; // await fetchLatest(channel);
 	let diff = latest - oldest;
 	addData('increase', {
 		"Date": moment().subtract(1, "days").format("YYYY-MM-DD"),
 		"increase": diff,
-		"start": oldest,
+		"start": startToday,
 	})
+	await setData("misc", "Name", "startToday", {
+		"Number": startToday,
+	});
+	startToday = latest;
 	let averageSpeed = Math.max(0, await getAverage());
 	let pastThousandsGoal = Math.floor(latest / 1000) * 1000;
 	let goals = predictSpeed(goalDate, goalNumber, latest);
@@ -244,24 +263,44 @@ app.event('message', async (body) => {
 			let ts = e.ts;
 			let c = e.channel;
 			let u = e.user;
-			if (number === lastValid + 1) {
+			let nextNumber = lastValid + 1;
+			let reacted = false;
+			if (u === lastCounter) {
+				postReaction(c, "bangbang", ts);
+				publishEphemeral(channel, `THIS IS A TEST PLEASE IGNORE: You can't count twice in a row, minion.`, u);
+			} else if (Number(number) === nextNumber) {
+				await setData("misc", "Name", "lastValid", {
+					"Name": "lastValid",
+					"Number": nextNumber,
+					"UserId": u,
+				});
+				lastCounter = u;
+				lastValid = nextNumber;
 				if (number % 1000 === 0) {
+					reacted = true;
 					postReaction(c, "tada", ts);
 				}
 				if (number % 5000 === 0) {
+					reacted = true;
 					pinMessage(c, ts);
 				}
 				if (number.slice(-2) === '69') {
+					reacted = true;
 					postReaction(c, "ok_hand", ts);
 				}
 				if (number.slice(-3) === '666') {
-					postReaction(c, "smiling_imp", ts)
+					reacted = true;
+					postReaction(c, "smiling_imp", ts);
 				} if (number.slice(-3) === number.slice(0, 3).split("").reverse().join("")) {
-					postReaction(c, "tacocat", ts)
+					reacted = true;
+					postReaction(c, "tacocat", ts);
+				}
+				if (!reacted) {
+					postReaction(c, "white_check_mark", ts);
 				}
 			} else {
 				postReaction(c, "bangbang", ts);
-				publishEphemeral(channel, `THIS IS A TEST PLEASE IGNORE: That's the wrong number, minion, it should be ${lastValid + 1}.`, u);
+				publishEphemeral(channel, `THIS IS A TEST PLEASE IGNORE: That's the wrong number, minion, it should be *${nextNumber}.*`, u);
 			}
 		}
 	} catch (err) {
@@ -294,6 +333,26 @@ app.event('app_mention', async (body) => {
 
 (async () => {
 	try {
+		const lvRecord = await getData("misc", "{Name} = 'lastValid'");
+		if (!!lvRecord) {
+			lastValid = lvRecord.fields.Number;
+			lastCounter = lvRecord.fields.UserId;
+		} else {
+			addData("misc", {
+				"Name": "lastValid",
+				"Number": 0,
+				"UserId": "",
+			});
+		}
+		const stRecord = await getData("misc", "{Name} = 'startToday'");
+		if (!!stRecord) {
+			startToday = stRecord.fields.Number;
+		} else {
+			addData("misc", {
+				"Name": "startToday",
+				"Number": 0,
+			});
+		}
 		await app.start(port);
 		schedule.scheduleJob('0 0 * * *', report);
 		console.log(`Started bot, listening on port ${port}`)
