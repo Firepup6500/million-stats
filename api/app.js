@@ -148,12 +148,11 @@ async function pinMessage(id, ts) {
 }
 
 async function addData(db, object) {
-	base(db).create(object, (err, _record) => {
-		if (err) {
-			console.error(err);
-			return;
-		}
-	});
+	try {
+		await base(db).create(object);
+	} catch (error) {
+		console.error(error);
+	}
 }
 
 async function setData(db, fieldName, fieldValue, object) {
@@ -232,12 +231,12 @@ async function report() {
 		const messageWithCelebration =
 			`:tada: Congratulations! We've went past ${pastThousandsGoal}! :tada: \n` +
 			message;
-		publishMessage(
+		await publishMessage(
 			channel,
 			addQuotes(messageWithCelebration, goals, averageSpeed),
 		);
 	} else {
-		publishMessage(channel, addQuotes(message, goals, averageSpeed));
+		await publishMessage(channel, addQuotes(message, goals, averageSpeed));
 	}
 
 	console.log("Sent daily report.");
@@ -263,15 +262,24 @@ app.event("message", async (body) => {
 		if (typeof e.subtype === "undefined" && /\d/.test(e.text[0])) {
 			const number = extractNumber(e.text);
 			if (!isNumeric(number)) return;
+
 			const ts = e.ts;
 			const c = e.channel;
 			const u = e.user;
 			const nextNumber = lastValid + 1;
 			let reacted = false;
+
 			if (u === lastCounter) {
-				postReaction(c, "bangbang", ts);
-				publishEphemeral(channel, `You can't count twice in a row, minion.`, u);
+				await postReaction(c, "bangbang", ts);
+				await publishEphemeral(
+					channel,
+					`You can't count twice in a row, minion.`,
+					u,
+				);
 			} else if (Number(number) === nextNumber) {
+				/** @type {Array<Promise<void>>} */
+				const reactions = [];
+
 				await setData("misc", "Name", "lastValid", {
 					Number: nextNumber,
 					UserId: u,
@@ -280,32 +288,34 @@ app.event("message", async (body) => {
 				lastValid = nextNumber;
 				if (number % 1000 === 0) {
 					reacted = true;
-					postReaction(c, "tada", ts);
+					reactions.push(postReaction(c, "tada", ts));
 				}
 				if (number % 5000 === 0) {
 					reacted = true;
-					pinMessage(c, ts);
+					reactions.push(pinMessage(c, ts));
 				}
 				if (number.slice(-2) === "69") {
 					reacted = true;
-					postReaction(c, "ok_hand", ts);
+					reactions.push(postReaction(c, "ok_hand", ts));
 				}
 				if (number.slice(-3) === "666") {
 					reacted = true;
-					postReaction(c, "smiling_imp", ts);
+					reactions.push(postReaction(c, "smiling_imp", ts));
 				}
 				if (
 					number.slice(-3) === number.slice(0, 3).split("").reverse().join("")
 				) {
 					reacted = true;
-					postReaction(c, "tacocat", ts);
+					reactions.push(postReaction(c, "tacocat", ts));
 				}
 				if (!reacted) {
-					postReaction(c, "white_check_mark", ts);
+					reactions.push(postReaction(c, "white_check_mark", ts));
 				}
+
+				await Promise.all(reactions);
 			} else {
-				postReaction(c, "bangbang", ts);
-				publishEphemeral(
+				await postReaction(c, "bangbang", ts);
+				await publishEphemeral(
 					channel,
 					`That's the wrong number, minion, it should be *${nextNumber}.*`,
 					u,
@@ -343,38 +353,36 @@ app.event("app_mention", async (body) => {
 /**
  * Checks if a string is numeric (i.e. can)
  * @param {string} value the value to check
- * @returns
+ * @returns if the value is numeric
  */
 function isNumeric(value) {
 	return !Number.isNaN(parseFloat(value)) && Number.isFinite(value);
 }
 
-(async () => {
-	try {
-		const lvRecord = await getData("misc", "{Name} = 'lastValid'");
-		if (lvRecord) {
-			lastValid = lvRecord.fields.Number;
-			lastCounter = lvRecord.fields.UserId;
-		} else {
-			addData("misc", {
-				Name: "lastValid",
-				Number: 0,
-				UserId: "",
-			});
-		}
-		const stRecord = await getData("misc", "{Name} = 'startToday'");
-		if (stRecord) {
-			startToday = stRecord.fields.Number;
-		} else {
-			addData("misc", {
-				Name: "startToday",
-				Number: 0,
-			});
-		}
-		await app.start(port);
-		scheduleJob("0 0 * * *", report);
-		console.log(`Started bot, listening on port ${port}`);
-	} catch (error) {
-		console.error(error);
+try {
+	const lvRecord = await getData("misc", "{Name} = 'lastValid'");
+	if (lvRecord) {
+		lastValid = lvRecord.fields.Number;
+		lastCounter = lvRecord.fields.UserId;
+	} else {
+		addData("misc", {
+			Name: "lastValid",
+			Number: 0,
+			UserId: "",
+		});
 	}
-})();
+	const stRecord = await getData("misc", "{Name} = 'startToday'");
+	if (stRecord) {
+		startToday = stRecord.fields.Number;
+	} else {
+		addData("misc", {
+			Name: "startToday",
+			Number: 0,
+		});
+	}
+	await app.start(port);
+	scheduleJob("0 0 * * *", report);
+	console.log(`Started bot, listening on port ${port}`);
+} catch (error) {
+	console.error(error);
+}
