@@ -18,9 +18,29 @@ const port = process.env.PORT ?? 3000;
 const goalDate = '6/1/2027';
 const goalNumber = 400000;
 
+let lastValid = 0;
+let dayStart = 0;
+
 const app = new App({
 	token: token,
-	signingSecret: process.env.SLACK_SIGNING_SECRET
+	signingSecret: process.env.SLACK_SIGNING_SECRET,
+	customRoutes: [
+		{
+			path: '/health-check',
+			method: ['GET'],
+			handler: (req, res) => {
+				res.end('OK');
+			},
+		},
+		{
+			path: '/api/currentNumber',
+			method: ['GET'],
+			handler: (req, res) => {
+				res.setHeader('Content-Type', 'application/json');
+				res.end(`{"number":${lastValid}}`);
+			},
+		}
+	],
 });
 
 function extractNumber(txt) {
@@ -90,6 +110,19 @@ async function publishMessage(id, text) {
 	}
 }
 
+async function publishEphemeral(id, text, userId) {
+	try {
+		await app.client.chat.postEphemeral({
+			token: token,
+			channel: id,
+			user: userId,
+			text: text
+		});
+	} catch (error) {
+		console.error(error);
+	}
+}
+
 async function postReaction(id, emoji, ts) {
 	try {
 		await app.client.reactions.add({
@@ -122,6 +155,23 @@ async function addData(db, object) {
 			return;
 		}
 	})
+}
+
+// yes this singular function was written by AI, sue me.
+async function getData(db, filterFormula) {
+	return new Promise((resolve, reject) => {
+		base(db).select({
+			filterByFormula: filterFormula,
+			maxRecords: 1,
+		}).firstPage((err, records) => {
+			if (err) {
+				console.error(err);
+				reject(err);
+				return;
+			}
+			resolve(records[0]);
+		});
+	});
 }
 
 async function getAverage() {
