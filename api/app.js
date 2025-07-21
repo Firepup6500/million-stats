@@ -359,6 +359,7 @@ app.event("message", async (body) => {
 				});
 				lastCounter = u;
 				lastValid = nextNumber;
+
 				if (number % 1000 === 0) {
 					reacted = true;
 					reactions.push(postReaction(c, "tada", ts));
@@ -368,33 +369,36 @@ app.event("message", async (body) => {
 					reacted = true;
 					reactions.push(pinMessage(c, ts));
 				}
-				if (extractedNumber.slice(-2) === "69") {
+				if (extractedNumber.endsWith("69")) {
 					reacted = true;
 					reactions.push(postReaction(c, "ok_hand", ts));
-				}
-				if (extractedNumber.slice(-3) === "666") {
-					reacted = true;
-					reactions.push(postReaction(c, "smiling_imp", ts));
-				}
-				if (
-					extractedNumber.slice(-3) ===
-					extractedNumber.slice(0, 3).split("").reverse().join("")
-				) {
-					reacted = true;
-					reactions.push(postReaction(c, "tacocat", ts));
-				}
-				if (!reacted) {
-					reactions.push(postReaction(c, "white_check_mark", ts));
-				}
+					if (extractedNumber.endsWith("666")) {
+						reacted = true;
+						reactions.push(postReaction(c, "smiling_imp", ts));
+					}
 
-				await Promise.all(reactions);
-			} else {
-				await postReaction(c, "bangbang", ts);
-				await publishEphemeral(
-					channel,
-					`That's the wrong number, minion, it should be *${nextNumber}.*`,
-					u,
-				);
+					const isPalindrome =
+						extractedNumber.slice(-3) ===
+						extractedNumber.slice(0, 3).split("").reverse().join("");
+
+					if (isPalindrome) {
+						reacted = true;
+						reactions.push(postReaction(c, "tacocat", ts));
+					}
+
+					if (!reacted) {
+						reactions.push(postReaction(c, "white_check_mark", ts));
+					}
+
+					await Promise.all(reactions);
+				} else {
+					await postReaction(c, "bangbang", ts);
+					await publishEphemeral(
+						channel,
+						`That's the wrong number, minion, it should be *${nextNumber}.*`,
+						u,
+					);
+				}
 			}
 		}
 	} catch (err) {
