@@ -22,7 +22,7 @@ const goalNumber = 400000;
 
 let lastValid = 0;
 let lastCounter = "";
-const dayStart = 0;
+let startToday = 0;
 
 const app = new App({
 	token: token,
