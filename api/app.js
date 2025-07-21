@@ -330,7 +330,7 @@ app.event("message", async (body) => {
 		if (typeof e.subtype === "undefined" && e.text) {
 			const extractedNumber = extractNumber(e.text);
 			const number = Number(extractedNumber);
-			if (!Number.isNaN(number)) return;
+			if (Number.isNaN(number)) return;
 
 			const ts = e.ts;
 			const c = e.channel;
@@ -345,7 +345,7 @@ app.event("message", async (body) => {
 					`You can't count twice in a row, minion.`,
 					u,
 				);
-			} else if (Number(number) === nextNumber) {
+			} else if (number === nextNumber) {
 				/** @type {Array<Promise<void>>} */
 				const reactions = [];
 
@@ -365,36 +365,38 @@ app.event("message", async (body) => {
 					reacted = true;
 					reactions.push(pinMessage(c, ts));
 				}
+
 				if (extractedNumber.endsWith("69")) {
 					reacted = true;
 					reactions.push(postReaction(c, "ok_hand", ts));
-					if (extractedNumber.endsWith("666")) {
-						reacted = true;
-						reactions.push(postReaction(c, "smiling_imp", ts));
-					}
-
-					const isPalindrome =
-						extractedNumber.slice(-3) ===
-						extractedNumber.slice(0, 3).split("").reverse().join("");
-
-					if (isPalindrome) {
-						reacted = true;
-						reactions.push(postReaction(c, "tacocat", ts));
-					}
-
-					if (!reacted) {
-						reactions.push(postReaction(c, "white_check_mark", ts));
-					}
-
-					await Promise.all(reactions);
-				} else {
-					await postReaction(c, "bangbang", ts);
-					await publishEphemeral(
-						channel,
-						`That's the wrong number, minion, it should be *${nextNumber}.*`,
-						u,
-					);
 				}
+
+				if (extractedNumber.endsWith("666")) {
+					reacted = true;
+					reactions.push(postReaction(c, "smiling_imp", ts));
+				}
+
+				const isPalindrome =
+					extractedNumber.slice(-3) ===
+					extractedNumber.slice(0, 3).split("").reverse().join("");
+
+				if (isPalindrome) {
+					reacted = true;
+					reactions.push(postReaction(c, "tacocat", ts));
+				}
+
+				if (!reacted) {
+					reactions.push(postReaction(c, "white_check_mark", ts));
+				}
+
+				await Promise.all(reactions);
+			} else {
+				await postReaction(c, "bangbang", ts);
+				await publishEphemeral(
+					channel,
+					`That's the wrong number, minion, it should be *${nextNumber}.*`,
+					u,
+				);
 			}
 		}
 	} catch (err) {
