@@ -69,7 +69,7 @@ async function fetchLatest(id) {
 		for (let x = 0; x < result.messages.length; x++) {
 			number = extractNumber(result.messages[x].text);
 
-			if (!Number.isNaN(Number(number))) break;
+			if (isNumeric(number)) break;
 		}
 		return number;
 	} catch (error) {
@@ -89,7 +89,7 @@ async function fetchOldest(id) {
 		for (let x = result.messages.length - 2; x >= 0; x--) {
 			number = extractNumber(result.messages[x].text);
 
-			if (!Number.isNaN(Number(number))) break;
+			if (isNumeric(number)) break;
 		}
 		return number - 1;
 	} catch (error) {
@@ -262,7 +262,7 @@ app.event("message", async (body) => {
 		const e = body.event;
 		if (typeof e.subtype === "undefined" && /\d/.test(e.text[0])) {
 			const number = extractNumber(e.text);
-			if (Number.isNaN(Number(number))) return;
+			if (!isNumeric(number)) return;
 			const ts = e.ts;
 			const c = e.channel;
 			const u = e.user;
@@ -339,6 +339,15 @@ app.event("app_mention", async (body) => {
 		console.error(err);
 	}
 });
+
+/**
+ * Checks if a string is numeric (i.e. can)
+ * @param {string} value the value to check
+ * @returns
+ */
+function isNumeric(value) {
+	return !Number.isNaN(parseFloat(value)) && Number.isFinite(value);
+}
 
 (async () => {
 	try {
