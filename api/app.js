@@ -243,19 +243,25 @@ app.event('message', async (body) => {
 			if (isNaN(number)) return;
 			let ts = e.ts;
 			let c = e.channel;
-			if (number % 1000 === 0) {
-				postReaction(c, "tada", ts);
-			}
-			if (number % 5000 === 0) {
-				pinMessage(c, ts);
-			}
-			if (number.slice(-2) === '69') {
-				postReaction(c, "ok_hand", ts);
-			}
-			if (number.slice(-3) === '666') {
-				postReaction(c, "smiling_imp", ts)
-			} if (number.slice(-3) === number.slice(0, 3).split("").reverse().join("")) {
-				postReaction(c, "tacocat", ts)
+			let u = e.user;
+			if (number === lastValid + 1) {
+				if (number % 1000 === 0) {
+					postReaction(c, "tada", ts);
+				}
+				if (number % 5000 === 0) {
+					pinMessage(c, ts);
+				}
+				if (number.slice(-2) === '69') {
+					postReaction(c, "ok_hand", ts);
+				}
+				if (number.slice(-3) === '666') {
+					postReaction(c, "smiling_imp", ts)
+				} if (number.slice(-3) === number.slice(0, 3).split("").reverse().join("")) {
+					postReaction(c, "tacocat", ts)
+				}
+			} else {
+				postReaction(c, "bangbang", ts);
+				publishEphemeral(channel, `THIS IS A TEST PLEASE IGNORE: That's the wrong number, minion, it should be ${lastValid + 1}.`, u);
 			}
 		}
 	} catch (err) {
