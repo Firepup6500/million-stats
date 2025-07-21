@@ -270,7 +270,6 @@ app.event('message', async (body) => {
 				publishEphemeral(channel, `You can't count twice in a row, minion.`, u);
 			} else if (Number(number) === nextNumber) {
 				await setData("misc", "Name", "lastValid", {
-					"Name": "lastValid",
 					"Number": nextNumber,
 					"UserId": u,
 				});
