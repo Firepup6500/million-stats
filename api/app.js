@@ -57,14 +57,14 @@ const app = new App({
 	customRoutes: [
 		{
 			path: "/health-check",
-			method: ["GET"],
+			method: "GET",
 			handler: (_req, res) => {
 				res.end("OK");
 			},
 		},
 		{
 			path: "/api/currentNumber",
-			method: ["GET"],
+			method: "GET",
 			handler: (_req, res) => {
 				res.setHeader("Content-Type", "application/json");
 				res.end(`{"number":${lastValid}}`);
@@ -81,12 +81,13 @@ const app = new App({
 function extractNumber(txt) {
 	// seperates the number from the rest of the message
 	const numberSeperators = ["-", " ", "\n"];
+	const applicableSeperators = numberSeperators.filter((seperator) =>
+		txt.includes(seperator),
+	);
 
 	let lowestIndex = Infinity;
-	for (const seperator of numberSeperators) {
-		if (txt.includes(seperator)) {
-			lowestIndex = Math.min(lowestIndex, txt.indexOf(seperator));
-		}
+	for (const seperator of applicableSeperators) {
+		lowestIndex = Math.min(lowestIndex, txt.indexOf(seperator));
 	}
 	if (lowestIndex !== Infinity) return txt.slice(0, lowestIndex);
 
@@ -235,14 +236,10 @@ async function getAverage() {
 			})
 			.firstPage();
 
-		let sum = 0;
-		obj.forEach((item) => {
-			if (typeof item.fields.increase === "number") {
-				sum += item.fields.increase;
-			} else {
-				console.warn(`Invalid increase value for item: ${item.id}`);
-			}
-		});
+		const sum = obj.reduce(
+			(sum, currentItem) => sum + Number(currentItem.fields.increase),
+			0,
+		);
 
 		return sum / obj.length;
 	} catch (error) {
