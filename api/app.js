@@ -58,45 +58,6 @@ function extractNumber(txt) {
 	return txt;
 }
 
-async function fetchLatest(id) {
-	try {
-		const result = await app.client.conversations.history({
-			token: token,
-			channel: id,
-			limit: 100,
-		});
-		let number;
-		for (let x = 0; x < result.messages.length; x++) {
-			number = extractNumber(result.messages[x].text);
-
-			if (isNumeric(number)) break;
-		}
-		return number;
-	} catch (error) {
-		console.error(error);
-	}
-}
-
-async function fetchOldest(id) {
-	try {
-		const result = await app.client.conversations.history({
-			token: token,
-			channel: id,
-			oldest: Math.floor(Date.now() / 1000) - 86400, //debug: 1609295166, actual: Math.floor(Date.now() / 1000) - 86400
-			inclusive: false,
-		});
-		let number;
-		for (let x = result.messages.length - 2; x >= 0; x--) {
-			number = extractNumber(result.messages[x].text);
-
-			if (isNumeric(number)) break;
-		}
-		return number - 1;
-	} catch (error) {
-		console.error(error);
-	}
-}
-
 async function publishMessage(id, text) {
 	try {
 		await app.client.chat.postMessage({
