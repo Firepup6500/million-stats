@@ -1,0 +1,22 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"checkJs": true,
+		"resolveJsonModule": true,
+		"moduleResolution": "node",
+		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"useUnknownInCatchVariables": true,
+		"allowUnreachableCode": false,
+		"noUncheckedIndexedAccess": true,
+		"target": "ESNext",
+		"module": "ESNext"
+	},
+	"exclude": ["node_modules", ".vscode"],
+	"typeAcquisition": {
+		"enable": true
+	}
+}
