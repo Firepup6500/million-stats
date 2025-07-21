@@ -157,21 +157,19 @@ async function addData(db, object) {
 	})
 }
 
-// yes this singular function was written by AI, sue me.
 async function getData(db, filterFormula) {
-	return new Promise((resolve, reject) => {
-		base(db).select({
-			filterByFormula: filterFormula,
-			maxRecords: 1,
-		}).firstPage((err, records) => {
-			if (err) {
-				console.error(err);
-				reject(err);
-				return;
-			}
-			resolve(records[0]);
-		});
-	});
+	try {
+		const obj = await base(db)
+			.select({
+				filterByFormula: filterFormula,
+				maxRecords: 1,
+			})
+			.firstPage();
+
+		return obj[0];
+	} catch (error) {
+		console.error(error);
+	}
 }
 
 async function getAverage() {
