@@ -256,16 +256,16 @@ async function report() {
 	const diff = latest - oldest;
 
 	await addData("increase", {
-		Date: DateTime.now().minus({ days: 1 }).toFormat("YYYY-MM-DD"),
+		Date: DateTime.now().minus({ days: 1 }).toISODate(),
 		increase: diff,
 		start: startToday,
 	});
 
+	startToday = latest;
+
 	await setData("misc", "Name", "startToday", {
 		Number: startToday,
 	});
-
-	startToday = latest;
 
 	// so Slack doesn't fail, just set the average to 0 if it's null
 	const averageSpeed = Math.max(0, (await getAverage()) ?? 0);
@@ -279,7 +279,7 @@ async function report() {
 	const message = `Today we've went from *${oldest}* to *${latest}*!
 		- :arrow_upper_right: The day's progress: *+${diff}*
 		- :chart_with_upwards_trend: Average daily speed: *${Math.round(averageSpeed)}*
-		- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${DateTime.fromJSDate(goalDate).toFormat("MMMM DD, YYYY")}.*
+		- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${DateTime.fromJSDate(goalDate).toLocaleString(DateTime.DATE_MED)}.*
 		- :calendar: If we want to get there on time, we need to count by at least *+${Math.ceil(predictedSpeed)}* a day.
 		- :1234: Here's a number to aim for today: *${Math.ceil(latest + predictedSpeed)}*`;
 	if (pastThousandsGoal > oldest && pastThousandsGoal <= latest) {
@@ -454,6 +454,7 @@ app.event("app_mention", async (body) => {
 			});
 		}
 		await app.start(port);
+		//await report(); // debugging
 		scheduleJob("0 0 * * *", report);
 		console.log(`Started bot, listening on port ${port}`);
 	} catch (error) {
