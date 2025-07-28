@@ -196,8 +196,8 @@ async function setData(table, fieldName, fieldValue, object) {
 			if (!object[fieldName]) object[fieldName] = fieldValue;
 			await addData(table, object);
 		}
-	} catch (err) {
-		console.error(err);
+	} catch (error) {
+		console.error(error);
 	}
 }
 
@@ -250,57 +250,61 @@ async function getAverage() {
  * Sends a report to Slack
  */
 async function report() {
-	console.log("Writing daily report...");
-	const oldest = startToday; // await fetchOldest(channel);
-	const latest = lastValid; // await fetchLatest(channel);
-	const diff = latest - oldest;
+	try {
+		console.log("Writing daily report...");
+		const oldest = startToday; // await fetchOldest(channel);
+		const latest = lastValid; // await fetchLatest(channel);
+		const diff = latest - oldest;
 
-	await addData("increase", {
-		Date: DateTime.now().minus({ days: 1 }).toISODate(),
-		increase: diff,
-		start: startToday,
-	});
+		await addData("increase", {
+			Date: DateTime.now().minus({ days: 1 }).toISODate(),
+			increase: diff,
+			start: startToday,
+		});
 
-	startToday = latest;
+		startToday = latest;
 
-	await setData("misc", "Name", "startToday", {
-		Number: startToday,
-	});
+		await setData("misc", "Name", "startToday", {
+			Number: startToday,
+		});
 
-	// so Slack doesn't fail, just set the average to 0 if it's null
-	const averageSpeed = Math.max(0, (await getAverage()) ?? 0);
-	const pastThousandsGoal = Math.floor(latest / 1000) * 1000;
-	const [daysRemaining, predictedSpeed] = predictSpeed(
-		goalDate,
-		goalNumber,
-		latest,
-	);
-
-	const message = `Today we've went from *${oldest}* to *${latest}*!
-		- :arrow_upper_right: The day's progress: *+${diff}*
-		- :chart_with_upwards_trend: Average daily speed: *${Math.round(averageSpeed)}*
-		- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${DateTime.fromJSDate(goalDate).toLocaleString(DateTime.DATE_MED)}.*
-		- :calendar: If we want to get there on time, we need to count by at least *+${Math.ceil(predictedSpeed)}* a day.
-		- :1234: Here's a number to aim for today: *${Math.ceil(latest + predictedSpeed)}*`;
-	if (pastThousandsGoal > oldest && pastThousandsGoal <= latest) {
-		const messageWithCelebration = `:tada: Congratulations! We've went past ${pastThousandsGoal}! :tada: \n${message}`;
-		await publishMessage(
-			channel,
-			addQuote(
-				messageWithCelebration,
-				daysRemaining,
-				predictedSpeed,
-				averageSpeed,
-			),
+		// so Slack doesn't fail, just set the average to 0 if it's null
+		const averageSpeed = Math.max(0, (await getAverage()) ?? 0);
+		const pastThousandsGoal = Math.floor(latest / 1000) * 1000;
+		const [daysRemaining, predictedSpeed] = predictSpeed(
+			goalDate,
+			goalNumber,
+			latest,
 		);
-	} else {
-		await publishMessage(
-			channel,
-			addQuote(message, daysRemaining, predictedSpeed, averageSpeed),
-		);
+
+		const message = `Today we've went from *${oldest}* to *${latest}*!
+			- :arrow_upper_right: The day's progress: *+${diff}*
+			- :chart_with_upwards_trend: Average daily speed: *${Math.round(averageSpeed)}*
+			- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${DateTime.fromJSDate(goalDate).toLocaleString(DateTime.DATE_MED)}.*
+			- :calendar: If we want to get there on time, we need to count by at least *+${Math.ceil(predictedSpeed)}* a day.
+			- :1234: Here's a number to aim for today: *${Math.ceil(latest + predictedSpeed)}*`;
+		if (pastThousandsGoal > oldest && pastThousandsGoal <= latest) {
+			const messageWithCelebration = `:tada: Congratulations! We've went past ${pastThousandsGoal}! :tada: \n${message}`;
+			await publishMessage(
+				channel,
+				addQuote(
+					messageWithCelebration,
+					daysRemaining,
+					predictedSpeed,
+					averageSpeed,
+				),
+			);
+		} else {
+			await publishMessage(
+				channel,
+				addQuote(message, daysRemaining, predictedSpeed, averageSpeed),
+			);
+		}
+
+		console.log("Sent daily report.");
+	} catch (error) {
+		console.error(error);
 	}
-
-	console.log("Sent daily report.");
 }
 
 /**
@@ -399,8 +403,8 @@ app.event("message", async (body) => {
 				);
 			}
 		}
-	} catch (err) {
-		console.error(err);
+	} catch (error) {
+		console.error(error);
 	}
 });
 
@@ -423,8 +427,8 @@ app.event("app_mention", async (body) => {
 		publishMessage(c, messageArray[choose]);
 
 		console.log("App mentioned.");
-	} catch (err) {
-		console.error(err);
+	} catch (error) {
+		console.error(error);
 	}
 });
 
