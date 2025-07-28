@@ -35,10 +35,15 @@ const token = ensureDefined(
 	"SLACK_BOT_TOKEN is not defined",
 );
 
-const channel = ensureDefined(
+const countChannel = ensureDefined(
 	process.env.SLACK_MILLION_CHANNEL,
 	"SLACK_MILLION_CHANNEL is not defined",
 );
+
+// optional channel for slack error logging, but it's not important enough to warrant being ensured
+const errorChannel = process.env.SLACK_ERROR_CHANNEL;
+
+const errorLogging = !!errorChannel;
 
 const port = Number(process.env.PORT) ?? 3000;
 if (!Number.isInteger(port)) throw new Error("PORT must be an integer");
@@ -100,8 +105,9 @@ function extractNumber(txt) {
  * Publishes a message to a channel.
  * @param {string} channelId the channel id
  * @param {string} text the text to publish
+ * @param {boolean} silent if errors should be silent
  */
-async function publishMessage(channelId, text) {
+async function publishMessage(channelId, text, silent = false) {
 	try {
 		await app.client.chat.postMessage({
 			token: token,
@@ -109,7 +115,10 @@ async function publishMessage(channelId, text) {
 			text: text,
 		});
 	} catch (error) {
-		console.error(error);
+		if (!silent) {
+			if (errorLogging) publishMessage(errorChannel, String(error), true);
+			console.error(error);
+		}
 	}
 }
 
@@ -128,6 +137,7 @@ async function publishEphemeral(channelId, text, userId) {
 			text: text,
 		});
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 }
@@ -148,8 +158,10 @@ async function postReaction(channelId, emoji, ts) {
 		});
 	} catch (error) {
 		if (error.data?.error == "already_reacted") {
+			if (errorLogging) publishMessage(errorChannel, `Tried to post a duplicate '${emoji}' reaction to message ${ts} in ${channelId}`, true);
 			console.error(`Tried to post a duplicate '${emoji}' reaction to message ${ts} in ${channelId}`);
 		} else {
+			if (errorLogging) publishMessage(errorChannel, String(error), true);
 			console.error(error);
 		}
 	}
@@ -168,6 +180,7 @@ async function pinMessage(channelId, ts) {
 			timestamp: ts,
 		});
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 }
@@ -181,6 +194,7 @@ async function addData(table, object) {
 	try {
 		await base(table).create(object);
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 }
@@ -204,6 +218,7 @@ async function setData(table, fieldName, fieldValue, object) {
 			await addData(table, object);
 		}
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 }
@@ -225,6 +240,7 @@ async function getData(table, filterFormula) {
 
 		return obj[0];
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 }
@@ -249,6 +265,7 @@ async function getAverage() {
 
 		return sum / obj.length;
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 }
@@ -259,8 +276,8 @@ async function getAverage() {
 async function report() {
 	try {
 		console.log("Writing daily report...");
-		const oldest = startToday; // await fetchOldest(channel);
-		const latest = lastValid; // await fetchLatest(channel);
+		const oldest = startToday; // await fetchOldest(countChannel);
+		const latest = lastValid; // await fetchLatest(countChannel);
 		const diff = latest - oldest;
 
 		await addData("increase", {
@@ -293,7 +310,7 @@ async function report() {
 		if (pastThousandsGoal > oldest && pastThousandsGoal <= latest) {
 			const messageWithCelebration = `:tada: Congratulations! We've went past ${pastThousandsGoal}! :tada: \n${message}`;
 			await publishMessage(
-				channel,
+				countChannel,
 				addQuote(
 					messageWithCelebration,
 					daysRemaining,
@@ -303,29 +320,35 @@ async function report() {
 			);
 		} else {
 			await publishMessage(
-				channel,
+				countChannel,
 				addQuote(message, daysRemaining, predictedSpeed, averageSpeed),
 			);
 		}
 
 		console.log("Sent daily report.");
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 }
 
 app.command('/send-report', async ({ command, ack, respond }) => {
-  await ack();
+	try {
+		await ack();
 
-  if (!botOwners.includes(command.user_id)) {
-    await respond({
-      response_type: 'ephemeral',
-      text: "Minion, you don't have privileges to tell me what to do",
-    });
-    return;
-  }
+		if (!botOwners.includes(command.user_id)) {
+			await respond({
+				response_type: 'ephemeral',
+				text: "Minion, you don't have privileges to tell me what to do",
+			});
+			return;
+		}
 
-  report();
+		report();
+	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		console.error(error);
+	}
 });
 
 /**
@@ -366,7 +389,7 @@ app.event("message", async (body) => {
 			if (u === lastCounter) {
 				await postReaction(c, "bangbang", ts);
 				await publishEphemeral(
-					channel,
+					c,
 					`You can't count twice in a row, minion.`,
 					u,
 				);
@@ -418,13 +441,14 @@ app.event("message", async (body) => {
 			} else {
 				await postReaction(c, "bangbang", ts);
 				await publishEphemeral(
-					channel,
+					c,
 					`That's the wrong number, minion, it should be *${nextNumber}.*`,
 					u,
 				);
 			}
 		}
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 });
@@ -449,6 +473,7 @@ app.event("app_mention", async (body) => {
 
 		console.log("App mentioned.");
 	} catch (error) {
+		if (errorLogging) publishMessage(errorChannel, String(error), true);
 		console.error(error);
 	}
 });
