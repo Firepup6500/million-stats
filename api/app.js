@@ -43,6 +43,9 @@ const channel = ensureDefined(
 const port = Number(process.env.PORT) ?? 3000;
 if (!Number.isInteger(port)) throw new Error("PORT must be an integer");
 
+// Really, we don't care too much about bot owners being set, it's just a debugging thing
+const botOwners = process.env.SLACK_OWNER_IDS ? process.env.SLACK_OWNER_IDS.split(',') : [];
+
 const goalDate = new Date("2027/06/01");
 const goalNumber = 400000;
 
@@ -310,6 +313,20 @@ async function report() {
 		console.error(error);
 	}
 }
+
+app.command('/send-report', async ({ command, ack, respond }) => {
+  await ack();
+
+  if (!botOwners.includes(command.user_id)) {
+    await respond({
+      response_type: 'ephemeral',
+      text: "Minion, you don't have privileges to tell me what to do",
+    });
+    return;
+  }
+
+  report();
+});
 
 /**
  * Predicts how much users need to count by each day to reach the goal on time.
