@@ -144,7 +144,11 @@ async function postReaction(channelId, emoji, ts) {
 			timestamp: ts,
 		});
 	} catch (error) {
-		console.error(error);
+		if (error.data?.error == "already_reacted") {
+			console.error(`Tried to post a duplicate '${emoji}' reaction to message ${ts} in ${channelId}`);
+		} else {
+			console.error(error);
+		}
 	}
 }
 
