@@ -52,7 +52,7 @@ if (!Number.isInteger(port)) throw new Error("PORT must be an integer");
 const botOwners = process.env.SLACK_OWNER_IDS ? process.env.SLACK_OWNER_IDS.split(',') : [];
 
 const goalDate = new Date("3027/01/01");
-if (Number.isNan(goalDate.getDate())) throw new Error("DATE must be a valid date (e.g. yyyy/mm/dd)")
+if (Number.isNaN(goalDate.getDate())) throw new Error("DATE must be a valid date (e.g. yyyy/mm/dd)")
 
 const goalNumber = Number(process.env.GOAL) ?? 1000000;
 if (!Number.isInteger(goalNumber)) throw new Error("GOAL must be an integer");
