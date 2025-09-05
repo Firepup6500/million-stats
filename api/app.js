@@ -51,8 +51,11 @@ if (!Number.isInteger(port)) throw new Error("PORT must be an integer");
 // Really, we don't care too much about bot owners being set, it's just a debugging thing
 const botOwners = process.env.SLACK_OWNER_IDS ? process.env.SLACK_OWNER_IDS.split(',') : [];
 
-const goalDate = new Date("2027/06/01");
-const goalNumber = 400000;
+const goalDate = new Date("3027/01/01");
+if (Number.isNan(goalDate.getDate())) throw new Error("DATE must be a valid date (e.g. yyyy/mm/dd)")
+
+const goalNumber = Number(process.env.GOAL) ?? 1000000;
+if (!Number.isInteger(goalNumber)) throw new Error("GOAL must be an integer");
 
 let lastValid = 0;
 let lastCounter = "";
