@@ -45,6 +45,8 @@ const errorChannel = process.env.SLACK_ERROR_CHANNEL;
 
 const errorLogging = !!errorChannel;
 
+const debugLogging = true && !!errorChannel; // TODO: disable whatever warning is going to be thrown by this
+
 const port = Number(process.env.PORT) ?? 3000;
 if (!Number.isInteger(port)) throw new Error("PORT must be an integer");
 
@@ -122,9 +124,29 @@ async function publishMessage(channelId, text, silent = false) {
 		});
 	} catch (error) {
 		if (!silent) {
-			if (errorLogging) publishMessage(errorChannel, String(error), true);
+			publishError(String(error));
 			console.error(error);
 		}
+	}
+}
+
+/**
+ * Publishes an error message to the error channel, if error logging is enabled, otherwise is a No-Op
+ * @param {string} message the message
+*/
+async function publishError(message) {
+	if (errorLogging) {
+		await publishMessage(errorChannel, message, true)
+	}
+}
+
+/**
+ * Publishes a debug message to the error channel, if error logging is enabled, otherwise is a No-Op
+ * @param {string} message the message
+*/
+async function publishDebug(message) {
+	if (debugLogging) {
+		await publishMessage(errorChannel, message, true)
 	}
 }
 
@@ -143,7 +165,7 @@ async function publishEphemeral(channelId, text, userId) {
 			text: text,
 		});
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 }
@@ -164,10 +186,10 @@ async function postReaction(channelId, emoji, ts) {
 		});
 	} catch (error) {
 		if (error.data?.error == "already_reacted") {
-			if (errorLogging) publishMessage(errorChannel, `Tried to post a duplicate '${emoji}' reaction to message ${ts} in ${channelId}`, true);
+			publishError(`Tried to post a duplicate '${emoji}' reaction to message ${ts} in ${channelId}`)
 			console.error(`Tried to post a duplicate '${emoji}' reaction to message ${ts} in ${channelId}`);
 		} else {
-			if (errorLogging) publishMessage(errorChannel, String(error), true);
+			publishError(String(error));
 			console.error(error);
 		}
 	}
@@ -186,7 +208,7 @@ async function pinMessage(channelId, ts) {
 			timestamp: ts,
 		});
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 }
@@ -200,7 +222,7 @@ async function addData(table, object) {
 	try {
 		await base(table).create(object);
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 }
@@ -224,7 +246,7 @@ async function setData(table, fieldName, fieldValue, object) {
 			await addData(table, object);
 		}
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 }
@@ -246,7 +268,7 @@ async function getData(table, filterFormula) {
 
 		return obj[0];
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 }
@@ -271,7 +293,7 @@ async function getAverage() {
 
 		return sum / obj.length;
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 }
@@ -333,7 +355,7 @@ async function report() {
 
 		console.log("Sent daily report.");
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 }
@@ -352,7 +374,7 @@ app.command('/send-report', async ({ command, ack, respond }) => {
 
 		report();
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 });
@@ -380,7 +402,7 @@ function predictSpeed(goalDate, goalNumber, currentNumber) {
 
 // Taken from https://stackoverflow.com/questions/951021/what-is-the-javascript-version-of-sleep#39914235
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 app.event("message", async (body) => {
@@ -391,12 +413,12 @@ app.event("message", async (body) => {
 			const number = Number(extractedNumber);
 			if (Number.isNaN(number)) return;
 
-            const myId = currentId++;
-            let sleepTime = 0;
-            while (myId != idToHandle && sleepTime < 120) {
-                await sleep(1000);
-                sleepTime++; // failsafe, in case we somehow get stuck
-            }
+			const myId = currentId++;
+			let sleepTime = 0;
+			while (myId != idToHandle && sleepTime < 120) {
+				await sleep(1000);
+				sleepTime++; // failsafe, in case we somehow get stuck
+			}
 
 
 			const ts = e.ts;
@@ -404,6 +426,8 @@ app.event("message", async (body) => {
 			const u = e.user;
 			const nextNumber = lastValid + 1;
 			let reacted = false;
+
+			publishDebug(JSON.stringify(e));
 
 			if (u === lastCounter) {
 				await postReaction(c, "bangbang", ts);
@@ -475,10 +499,10 @@ app.event("message", async (body) => {
 					u,
 				);
 			}
-            idToHandle++;
+			idToHandle++;
 		}
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 });
@@ -503,7 +527,7 @@ app.event("app_mention", async (body) => {
 
 		console.log("App mentioned.");
 	} catch (error) {
-		if (errorLogging) publishMessage(errorChannel, String(error), true);
+		publishError(String(error));
 		console.error(error);
 	}
 });
