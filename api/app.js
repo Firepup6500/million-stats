@@ -51,7 +51,7 @@ if (!Number.isInteger(port)) throw new Error("PORT must be an integer");
 // Really, we don't care too much about bot owners being set, it's just a debugging thing
 const botOwners = process.env.SLACK_OWNER_IDS ? process.env.SLACK_OWNER_IDS.split(',') : [];
 
-const goalDate = new Date("3027/01/01");
+const goalDate = new Date(!!process.env.DATE? process.env.DATE : "3027/01/01");
 if (Number.isNaN(goalDate.getDate())) throw new Error("DATE must be a valid date (e.g. yyyy/mm/dd)")
 
 const goalNumber = Number(process.env.GOAL) ?? 1000000;
@@ -60,6 +60,9 @@ if (!Number.isInteger(goalNumber)) throw new Error("GOAL must be an integer");
 let lastValid = 0;
 let lastCounter = "";
 let startToday = 0;
+
+let currentId = 0;
+let idToHandle = 0;
 
 const app = new App({
 	token: token,
@@ -375,6 +378,11 @@ function predictSpeed(goalDate, goalNumber, currentNumber) {
 	return [daysRemaining, neededSpeed];
 }
 
+// Taken from https://stackoverflow.com/questions/951021/what-is-the-javascript-version-of-sleep#39914235
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 app.event("message", async (body) => {
 	try {
 		const e = body.event;
@@ -382,6 +390,14 @@ app.event("message", async (body) => {
 			const extractedNumber = extractNumber(e.text);
 			const number = Number(extractedNumber);
 			if (Number.isNaN(number)) return;
+
+            const myId = currentId++;
+            let sleepTime = 0;
+            while (myId != idToHandle && sleepTime < 120) {
+                await sleep(1000);
+                sleepTime++; // failsafe, in case we somehow get stuck
+            }
+
 
 			const ts = e.ts;
 			const c = e.channel;
@@ -449,6 +465,7 @@ app.event("message", async (body) => {
 					u,
 				);
 			}
+            idToHandle++;
 		}
 	} catch (error) {
 		if (errorLogging) publishMessage(errorChannel, String(error), true);
