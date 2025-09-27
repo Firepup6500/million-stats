@@ -40,12 +40,20 @@ const countChannel = ensureDefined(
 	"SLACK_MILLION_CHANNEL is not defined",
 );
 
-// optional channel for slack error logging, but it's not important enough to warrant being ensured
-const errorChannel = process.env.SLACK_ERROR_CHANNEL;
+// optional channel for slack logging, but it's not important enough to warrant being ensured
+const loggingChannel = process.env.SLACK_LOGGING_CHANNEL;
 
-const errorLogging = !!errorChannel;
+const doLogging = !!loggingChannel;
 
-const debugLogging = true && !!errorChannel; // TODO: disable whatever warning is going to be thrown by this
+if (!mainLogging) {
+	console.warn("WARN: No logging channel! No logs of any kind will be sent to slack!")
+}
+
+const debugLogging = false && doLogging; // TODO: disable whatever warning is going to be thrown by this
+
+if (!debugLogging) {
+	console.warn("WARN: App is logging debug info!")
+}
 
 const port = Number(process.env.PORT) ?? 3000;
 if (!Number.isInteger(port)) throw new Error("PORT must be an integer");
@@ -124,29 +132,41 @@ async function publishMessage(channelId, text, silent = false) {
 		});
 	} catch (error) {
 		if (!silent) {
-			publishError(String(error));
-			console.error(error);
+			publishError(String(error), error);
 		}
 	}
 }
 
 /**
- * Publishes an error message to the error channel, if error logging is enabled, otherwise is a No-Op
+ * Publishes an error message to the logging channel and to the console, if logging is enabled, otherwise only to the console
  * @param {string} message the message
+ * @param {object} error the error object
 */
-async function publishError(message) {
-	if (errorLogging) {
-		await publishMessage(errorChannel, message, true)
-	}
+async function publishError(message, error) {
+	console.error('ERROR: ' + message);
+	if (!!error) console.error(error);
+	if (mainLogging) await publishMessage(loggingChannel, 'ERROR: ' + message, true);
 }
 
 /**
- * Publishes a debug message to the error channel, if error logging is enabled, otherwise is a No-Op
+ * Publishes a debug message to the logging channel and to the console, if debug logging is enabled, otherwise is a No-op
  * @param {string} message the message
 */
 async function publishDebug(message) {
 	if (debugLogging) {
-		await publishMessage(errorChannel, message, true)
+		console.debug('DEBUG: ' + message);
+		await publishMessage(loggingChannel, 'DEBUG: ' + message, true);
+	}
+}
+
+/**
+ * Publishes an info message to the logging channel and to the console, if logging is enabled, otherwise only to the console
+ * @param {string} message the message
+*/
+async function publishInfo(message) {
+	console.debug('INFO: ' + message);
+	if (debugLogging) {
+		await publishMessage(loggingChannel, 'INFO: ' + message, true);
 	}
 }
 
@@ -165,8 +185,7 @@ async function publishEphemeral(channelId, text, userId) {
 			text: text,
 		});
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 }
 
@@ -187,10 +206,8 @@ async function postReaction(channelId, emoji, ts) {
 	} catch (error) {
 		if (error.data?.error == "already_reacted") {
 			publishError(`Tried to post a duplicate '${emoji}' reaction to message ${ts} in ${channelId}`)
-			console.error(`Tried to post a duplicate '${emoji}' reaction to message ${ts} in ${channelId}`);
 		} else {
-			publishError(String(error));
-			console.error(error);
+			publishError(String(error), error);
 		}
 	}
 }
@@ -208,8 +225,7 @@ async function pinMessage(channelId, ts) {
 			timestamp: ts,
 		});
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 }
 
@@ -222,8 +238,7 @@ async function addData(table, object) {
 	try {
 		await base(table).create(object);
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 }
 
@@ -246,8 +261,7 @@ async function setData(table, fieldName, fieldValue, object) {
 			await addData(table, object);
 		}
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 }
 
@@ -268,8 +282,7 @@ async function getData(table, filterFormula) {
 
 		return obj[0];
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 }
 
@@ -293,8 +306,7 @@ async function getAverage() {
 
 		return sum / obj.length;
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 }
 
@@ -303,7 +315,7 @@ async function getAverage() {
  */
 async function report() {
 	try {
-		console.log("Writing daily report...");
+		publishInfo("Writing daily report...");
 		const oldest = startToday; // await fetchOldest(countChannel);
 		const latest = lastValid; // await fetchLatest(countChannel);
 		const diff = latest - oldest;
@@ -353,10 +365,9 @@ async function report() {
 			);
 		}
 
-		console.log("Sent daily report.");
+		publishInfo("Sent daily report.");
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 }
 
@@ -374,8 +385,7 @@ app.command('/send-report', async ({ command, ack, respond }) => {
 
 		report();
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 });
 
@@ -422,6 +432,7 @@ app.event("message", async (body) => {
 
 
 			const ts = e.ts;
+			const thread_ts = e.thread_ts;
 			const c = e.channel;
 			const u = e.user;
 			const nextNumber = lastValid + 1;
@@ -429,11 +440,14 @@ app.event("message", async (body) => {
 
 			publishDebug(JSON.stringify(e));
 
-			if (u === lastCounter) {
+			if (!!thread_ts && thread_ts !== ts) {
+				await postReaction(c, "bangbang", ts);
+				await publishEphemeral(c, "Minion, this isn't funny. Count in the main channel, not a thread.", u);
+			} else if (u === lastCounter) {
 				await postReaction(c, "bangbang", ts);
 				await publishEphemeral(
 					c,
-					`You can't count twice in a row, minion.`,
+					"You can't count twice in a row, minion.",
 					u,
 				);
 			} else if (number === nextNumber) {
@@ -502,8 +516,7 @@ app.event("message", async (body) => {
 			idToHandle++;
 		}
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 });
 
@@ -525,10 +538,9 @@ app.event("app_mention", async (body) => {
 		// @ts-expect-error choose is always in bounds
 		publishMessage(c, messageArray[choose]);
 
-		console.log("App mentioned.");
+		publishInfo("App mentioned.");
 	} catch (error) {
-		publishError(String(error));
-		console.error(error);
+		publishError(String(error), error);
 	}
 });
 
@@ -560,8 +572,8 @@ app.event("app_mention", async (body) => {
 		await app.start(port);
 		//await report(); // debugging
 		scheduleJob("0 0 * * *", report);
-		console.log(`Started bot, listening on port ${port}`);
+		publishInfo(`Started bot, listening on port ${port}`);
 	} catch (error) {
-		console.error(error);
+		publishError(String(error), error);
 	}
 })();
