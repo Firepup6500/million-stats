@@ -443,6 +443,16 @@ app.event("message", async (body) => {
 					reactions.push(postReaction(c, "smiling_imp", ts));
 				}
 
+				if (extractedNumber.endsWith("650")) {
+					reacted = true;
+					reactions.push(postReaction(c, "firepup650-v2", ts));
+				}
+
+				if (extractedNumber.endsWith("404")) {
+					reacted = true;
+					reactions.push(postReaction(c, "Food-when", ts));
+				}
+
 				const isPalindrome =
 					extractedNumber.slice(-3) ===
 					extractedNumber.slice(0, 3).split("").reverse().join("");
