@@ -45,7 +45,7 @@ const loggingChannel = process.env.SLACK_LOGGING_CHANNEL;
 
 const doLogging = !!loggingChannel;
 
-if (!mainLogging) {
+if (!doLogging) {
 	console.warn("WARN: No logging channel! No logs of any kind will be sent to slack!")
 }
 
@@ -145,7 +145,7 @@ async function publishMessage(channelId, text, silent = false) {
 async function publishError(message, error) {
 	console.error('ERROR: ' + message);
 	if (!!error) console.error(error);
-	if (mainLogging) await publishMessage(loggingChannel, 'ERROR: ' + message, true);
+	if (doLogging) await publishMessage(loggingChannel, 'ERROR: ' + message, true);
 }
 
 /**
