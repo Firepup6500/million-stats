@@ -51,7 +51,7 @@ if (!doLogging) {
 
 const debugLogging = false && doLogging; // TODO: disable whatever warning is going to be thrown by this
 
-if (!debugLogging) {
+if (debugLogging) {
 	console.warn("WARN: App is logging debug info!")
 }
 
@@ -164,10 +164,8 @@ async function publishDebug(message) {
  * @param {string} message the message
 */
 async function publishInfo(message) {
-	console.debug('INFO: ' + message);
-	if (debugLogging) {
-		await publishMessage(loggingChannel, 'INFO: ' + message, true);
-	}
+	console.info('INFO: ' + message);
+	if (doLogging) await publishMessage(loggingChannel, 'INFO: ' + message, true);
 }
 
 /**
@@ -425,6 +423,7 @@ app.event("message", async (body) => {
 
 			const myId = currentId++;
 			let sleepTime = 0;
+			publishDebug(`Will sleep? ${myId != idToHandle}`)
 			while (myId != idToHandle && sleepTime < 120) {
 				await sleep(1000);
 				sleepTime++; // failsafe, in case we somehow get stuck
@@ -546,6 +545,7 @@ app.event("app_mention", async (body) => {
 
 (async () => {
 	try {
+		if (debugLogging) console.debug("DEBUG: Getting last valid number from airtable...")
 		const lvRecord = await getData("misc", "{Name} = 'lastValid'");
 		if (lvRecord) {
 			// @ts-expect-error lastValid is always a number, unless the table was somehow setup incorrectly. Skill issue tbh
@@ -559,6 +559,7 @@ app.event("app_mention", async (body) => {
 				UserId: "",
 			});
 		}
+		if (debugLogging) console.debug("DEBUG: Getting today's starting number from airtable...")
 		const stRecord = await getData("misc", "{Name} = 'startToday'");
 		if (stRecord) {
 			// @ts-expect-error startToday is always a number. Ditto.
@@ -569,6 +570,7 @@ app.event("app_mention", async (body) => {
 				Number: 0,
 			});
 		}
+		console.info("INFO: Trying to startup...")
 		await app.start(port);
 		//await report(); // debugging
 		scheduleJob("0 0 * * *", report);
