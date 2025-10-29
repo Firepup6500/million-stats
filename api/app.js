@@ -407,7 +407,7 @@ function sleep(ms) {
 app.event("message", async (body) => {
 	try {
 		const e = body.event;
-		if (typeof e.subtype === "undefined" && e.text) {
+		if ((typeof e.subtype === "undefined" || e.subtype === 'file_share') && e.text) {
 			const extractedNumber = extractNumber(e.text);
 			const number = Number(extractedNumber);
 			if (Number.isNaN(number)) return;
