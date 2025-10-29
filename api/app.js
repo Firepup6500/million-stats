@@ -233,9 +233,7 @@ async function pinMessage(channelId, ts) {
  */
 async function setMisc(name, number, userId = null) {
 	return new Promise((resolve) => {
-		const stmt = db.prepare('INSERT INTO misc(name, number, userId) VALUES (?, ?, ?) ON CONFLICT (name) DO UPDATE SET number = EXCLUDED.number, userId = EXCLUDED.userId')
-		stmt.run(name, number, userId)
-		stmt.finalize((err) => {
+		db.run('INSERT INTO misc(name, number, userId) VALUES (?, ?, ?) ON CONFLICT (name) DO UPDATE SET number = EXCLUDED.number, userId = EXCLUDED.userId', [name, number, userId], (err) => {
 			if (err) {
 				publishError(String(err), err)
 			}
@@ -252,9 +250,7 @@ async function setMisc(name, number, userId = null) {
  */
 async function addIncrease(date, increase, start) {
 	return new Promise((resolve) => {
-		const stmt = db.prepare('INSERT INTO increase(date, change, start) VALUES (?, ?, ?)')
-		stmt.run(date, increase, start)
-		stmt.finalize((err) => {
+		db.run('INSERT INTO increase(date, change, start) VALUES (?, ?, ?)', [date, increase, start], (err) => {
 			if (err) {
 				publishError(String(err), err)
 			}
@@ -270,27 +266,23 @@ async function addIncrease(date, increase, start) {
  */
 async function getMisc(name) {
 	return new Promise((resolve) => {
-		const stmt = db.prepare('SELECT number, userId FROM misc WHERE name = ?')
-		stmt.get([name], (err, row) => {
+		db.get('SELECT number, userId FROM misc WHERE name = ?', [name], (err, row) => {
 			if (err) {
 				publishError(String(err), err)
 			}
 			resolve(row)
 		})
-		stmt.finalize()
 	})
 }
 
 async function getMonthIncrease() {
 	return new Promise((resolve) => {
-		const stmt = db.prepare('SELECT change FROM increase ORDER BY date DESC LIMIT 30')
-		stmt.get((err, row) => {
+		db.get('SELECT change FROM increase ORDER BY date DESC LIMIT 30', (err, row) => {
 			if (err) {
 				publishError(String(err), err)
 			}
 			resolve(row)
 		})
-		stmt.finalize()
 	})
 }
 
