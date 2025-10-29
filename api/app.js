@@ -1,10 +1,13 @@
 const { App } = require("@slack/bolt");
 const { base: _base, configure } = require("airtable");
+//const sql = require("sqlite3");
 const { DateTime } = require("luxon");
 const { scheduleJob } = require("node-schedule");
 const { addQuote } = require("./quotes.js");
 
 require("dotenv").config();
+
+//const db = new sql.Database("database.db");
 
 configure({
 	endpointUrl: "https://api.airtable.com",
@@ -241,7 +244,7 @@ async function addData(table, object) {
 }
 
 /**
- * Adds data to a table.
+ * Sets data in a table.
  *
  * If the field is already present with the specified value, it will be updated.
  * @param {string} table the table name

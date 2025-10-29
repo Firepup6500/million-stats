@@ -12,7 +12,8 @@
 		"airtable": "^0.11.0",
 		"dotenv": "^16.3.1",
 		"luxon": "^3.7.1",
-		"node-schedule": "^2.0.0"
+		"node-schedule": "^2.0.0",
+		"sqlite3": "^5.1.7"
 	},
 	"engines": {
 		"node": "20.x"
