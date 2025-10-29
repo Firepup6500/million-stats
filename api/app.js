@@ -1,18 +1,13 @@
 const { App } = require("@slack/bolt");
-const { base: _base, configure } = require("airtable");
-//const sql = require("sqlite3");
+// const { base: _base, configure } = require("airtable");
+const sql = require("sqlite3");
 const { DateTime } = require("luxon");
 const { scheduleJob } = require("node-schedule");
 const { addQuote } = require("./quotes.js");
 
 require("dotenv").config();
 
-//const db = new sql.Database("database.db");
-
-configure({
-	endpointUrl: "https://api.airtable.com",
-	apiKey: process.env.AIRTABLE_API_KEY,
-});
+const db = new sql.Database("database.db");
 
 /**
  * Ensures that a value is defined, else throws an error.
@@ -26,12 +21,12 @@ function ensureDefined(value, message) {
 	return value;
 }
 
-const base = _base(
-	ensureDefined(
-		process.env.AIRTABLE_BASE_ID,
-		"AIRTABLE_BASE_ID is not defined",
-	),
-);
+// const base = _base(
+// 	ensureDefined(
+// 		process.env.AIRTABLE_BASE_ID,
+// 		"AIRTABLE_BASE_ID is not defined",
+// 	),
+// );
 
 const token = ensureDefined(
 	process.env.SLACK_BOT_TOKEN,
@@ -231,60 +226,72 @@ async function pinMessage(channelId, ts) {
 }
 
 /**
- * Adds data to a table.
- * @param {string} table the table name
- * @param {Record<string, any>} object the data to add
+ * Adds or updates a misc entry
+ * @param {string} name the record name
+ * @param {number} number the number of the entry
+ * @param {string|null} [userId=null] the user id of the entry
  */
-async function addData(table, object) {
-	try {
-		await base(table).create(object);
-	} catch (error) {
-		publishError(String(error), error);
-	}
+async function setMisc(name, number, userId = null) {
+	return new Promise((resolve) => {
+		const stmt = db.prepare('INSERT INTO misc(name, number, userId) VALUES (?, ?, ?) ON CONFLICT (name) DO UPDATE SET number = EXCLUDED.number, userId = EXCLUDED.userId')
+		stmt.run(name, number, userId)
+		stmt.finalize((err) => {
+			if (err) {
+				publishError(String(err), err)
+			}
+			resolve(undefined)
+		})
+	})
 }
 
 /**
- * Sets data in a table.
- *
- * If the field is already present with the specified value, it will be updated.
- * @param {string} table the table name
- * @param {string} fieldName the field name
- * @param {string} fieldValue the field value
- * @param {Record<string, any>} object the data to set
+ * Adds an increase record for a day.
+ * @param {string} date the date of the record in ISO format
+ * @param {number} increase the increase in the day
+ * @param {number} start the starting number of the day
  */
-async function setData(table, fieldName, fieldValue, object) {
-	try {
-		const record = await getData(table, `{${fieldName}} = '${fieldValue}'`);
-		if (record) {
-			await base(table).update(record.id, object);
-		} else {
-			if (!object[fieldName]) object[fieldName] = fieldValue;
-			await addData(table, object);
-		}
-	} catch (error) {
-		publishError(String(error), error);
-	}
+async function addIncrease(date, increase, start) {
+	return new Promise((resolve) => {
+		const stmt = db.prepare('INSERT INTO increase(date, change, start) VALUES (?, ?, ?)')
+		stmt.run(date, increase, start)
+		stmt.finalize((err) => {
+			if (err) {
+				publishError(String(err), err)
+			}
+			resolve(undefined)
+		})
+	})
 }
 
 /**
- * Gets data from a table.
- * @param {string} table the table name
- * @param {string} filterFormula the filter to get the data required
- * @returns the data
+ * Gets an entry from the misc table.
+ * @param {string} name the name of the misc entry
+ * @returns the entry if found
  */
-async function getData(table, filterFormula) {
-	try {
-		const obj = await base(table)
-			.select({
-				filterByFormula: filterFormula,
-				maxRecords: 1,
-			})
-			.firstPage();
+async function getMisc(name) {
+	return new Promise((resolve) => {
+		const stmt = db.prepare('SELECT number, userId FROM misc WHERE name = ?')
+		stmt.get([name], (err, row) => {
+			if (err) {
+				publishError(String(err), err)
+			}
+			resolve(row)
+		})
+		stmt.finalize()
+	})
+}
 
-		return obj[0];
-	} catch (error) {
-		publishError(String(error), error);
-	}
+async function getMonthIncrease() {
+	return new Promise((resolve) => {
+		const stmt = db.prepare('SELECT change FROM increase ORDER BY date DESC LIMIT 30')
+		stmt.get((err, row) => {
+			if (err) {
+				publishError(String(err), err)
+			}
+			resolve(row)
+		})
+		stmt.finalize()
+	})
 }
 
 /**
@@ -293,15 +300,10 @@ async function getData(table, filterFormula) {
  */
 async function getAverage() {
 	try {
-		const obj = await base("increase")
-			.select({
-				maxRecords: 30,
-				sort: [{ field: "Date", direction: "desc" }],
-			})
-			.firstPage();
+		const obj = await getMonthIncrease()
 
 		const sum = obj.reduce(
-			(sum, currentItem) => sum + Number(currentItem.fields.increase),
+			(sum, currentItem) => sum + Number(currentItem.increase),
 			0,
 		);
 
@@ -321,17 +323,11 @@ async function report() {
 		const latest = lastValid; // await fetchLatest(countChannel);
 		const diff = latest - oldest;
 
-		await addData("increase", {
-			Date: DateTime.now().minus({ days: 1 }).toISODate(),
-			increase: diff,
-			start: startToday,
-		});
+		addIncrease(DateTime.now().minus({ days: 1 }).toISODate(), diff, startToday)
 
 		startToday = latest;
 
-		await setData("misc", "Name", "startToday", {
-			Number: startToday,
-		});
+		await setMisc('startToday', startToday)
 
 		// so Slack doesn't fail, just set the average to 0 if it's null
 		const averageSpeed = Math.max(0, (await getAverage()) ?? 0);
@@ -456,10 +452,7 @@ app.event("message", async (body) => {
 				/** @type {Array<Promise<void>>} */
 				const reactions = [];
 
-				await setData("misc", "Name", "lastValid", {
-					Number: nextNumber,
-					UserId: u,
-				});
+				await setMisc('lastValid', nextNumber, u)
 				lastCounter = u;
 				lastValid = nextNumber;
 
@@ -549,29 +542,19 @@ app.event("app_mention", async (body) => {
 (async () => {
 	try {
 		if (debugLogging) console.debug("DEBUG: Getting last valid number from airtable...")
-		const lvRecord = await getData("misc", "{Name} = 'lastValid'");
+		const lvRecord = await getMisc('lastValid');
 		if (lvRecord) {
-			// @ts-expect-error lastValid is always a number, unless the table was somehow setup incorrectly. Skill issue tbh
-			lastValid = lvRecord.fields.Number;
-			// @ts-expect-error lastCounter is always a string. Ditto.
-			lastCounter = lvRecord.fields.UserId;
+			lastValid = lvRecord.number;
+			lastCounter = lvRecord.userId;
 		} else {
-			addData("misc", {
-				Name: "lastValid",
-				Number: 0,
-				UserId: "",
-			});
+			setMisc('lastValid', 0)
 		}
 		if (debugLogging) console.debug("DEBUG: Getting today's starting number from airtable...")
-		const stRecord = await getData("misc", "{Name} = 'startToday'");
+		const stRecord = await getMisc("startToday");
 		if (stRecord) {
-			// @ts-expect-error startToday is always a number. Ditto.
-			startToday = stRecord.fields.Number;
+			startToday = stRecord.number;
 		} else {
-			addData("misc", {
-				Name: "startToday",
-				Number: 0,
-			});
+			setMisc('startToday', 0)
 		}
 		console.info("INFO: Trying to startup...")
 		await app.start(port);
