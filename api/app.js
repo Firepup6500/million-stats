@@ -521,7 +521,7 @@ app.event("app_mention", async (body) => {
 		if (!!thread_ts && thread_ts !== ts) {
 			publishEphemeral(c, messageArray[choose], u);
 			publishInfo("App mentioned in a thread.");
-		else {
+		} else {
 			publishMessage(c, messageArray[choose]);
 			publishInfo("App mentioned.");
 		}
