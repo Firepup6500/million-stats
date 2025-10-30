@@ -267,9 +267,9 @@ async function getMisc(name) {
 	})
 }
 
-async function getMonthIncrease() {
+async function getIncrease(days) {
 	return new Promise((resolve) => {
-		db.get('SELECT change FROM increase ORDER BY date DESC LIMIT 30', (err, row) => {
+		db.get('SELECT change FROM increase ORDER BY date DESC LIMIT ?', [days], (err, row) => {
 			if (err) {
 				publishError(String(err), err)
 			}
@@ -284,10 +284,10 @@ async function getMonthIncrease() {
  */
 async function getAverage() {
 	try {
-		const obj = await getMonthIncrease()
+		const obj = await getIncrease(30)
 
 		const sum = obj.reduce(
-			(sum, currentItem) => sum + Number(currentItem.increase),
+			(sum, currentItem) => sum + Number(currentItem.change),
 			0,
 		);
 
