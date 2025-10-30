@@ -503,6 +503,9 @@ app.event("app_mention", async (body) => {
 	try {
 		const e = body.event;
 		const c = e.channel;
+		const ts = e.ts;
+		const u = e.user;
+		const thread_ts = e.thread_ts;
 		const choose = Math.floor(Math.random() * 7);
 		const messageArray = [
 			"DO NOT BOTHER ME. I AM SLEEPING.",
@@ -515,9 +518,13 @@ app.event("app_mention", async (body) => {
 		];
 
 		// @ts-expect-error choose is always in bounds
-		publishMessage(c, messageArray[choose]);
-
-		publishInfo("App mentioned.");
+		if (!!thread_ts && thread_ts !== ts) {
+			publishEphemeral(c, messageArray[choose], u);
+			publishInfo("App mentioned in a thread.");
+		else {
+			publishMessage(c, messageArray[choose]);
+			publishInfo("App mentioned.");
+		}
 	} catch (error) {
 		publishError(String(error), error);
 	}
