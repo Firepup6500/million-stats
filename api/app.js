@@ -1,5 +1,4 @@
 const { App } = require("@slack/bolt");
-// const { base: _base, configure } = require("airtable");
 const sql = require("sqlite3");
 const { DateTime } = require("luxon");
 const { scheduleJob } = require("node-schedule");
@@ -20,13 +19,6 @@ function ensureDefined(value, message) {
 	if (!value) throw new Error(message);
 	return value;
 }
-
-// const base = _base(
-// 	ensureDefined(
-// 		process.env.AIRTABLE_BASE_ID,
-// 		"AIRTABLE_BASE_ID is not defined",
-// 	),
-// );
 
 const token = ensureDefined(
 	process.env.SLACK_BOT_TOKEN,
