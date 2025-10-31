@@ -269,7 +269,7 @@ async function getMisc(name) {
 
 async function getIncrease(days) {
 	return new Promise((resolve) => {
-		db.get('SELECT change FROM increase ORDER BY date DESC LIMIT ?', [days], (err, row) => {
+		db.all('SELECT change FROM increase ORDER BY date DESC LIMIT ?', [days], (err, row) => {
 			if (err) {
 				publishError(String(err), err)
 			}
