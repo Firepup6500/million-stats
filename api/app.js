@@ -80,6 +80,7 @@ const app = new App({
 			method: "GET",
 			handler: (_req, res) => {
 				res.setHeader("Content-Type", "application/json");
+				res.setHeader("Access-Control-Allow-Origin", "*");
 				res.end(`{"number":${lastValid}}`);
 			},
 		},
