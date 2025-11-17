@@ -11,17 +11,17 @@ cur = con.cursor()
 # pylint: disable=line-too-long
 # Create tables
 cur.execute(
-    "CREATE TABLE IF NOT EXISTS increase (id INTEGER PRIMARY KEY, date DATETIME UNIQUE NOT NULL, change INTEGER NOT NULL, start INTEGER NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS increase (id INTEGER PRIMARY KEY, date DATE UNIQUE NOT NULL, change INTEGER NOT NULL, start INTEGER NOT NULL);"
 )
 cur.execute(
     "CREATE TABLE IF NOT EXISTS misc (id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL, number INTEGER NOT NULL, userId TEXT);"
 )
 cur.execute(
-    "CREATE TABLE IF NOT EXISTS leaderboard (id INTEGER PRIMARY KEY, userId TEXT NOT NULL, change INTEGER NOT NULL, date DATETIME NOT NULL, UNIQUE(userId, date));"
+    "CREATE TABLE IF NOT EXISTS leaderboard (id INTEGER PRIMARY KEY, userId TEXT NOT NULL, change INTEGER NOT NULL, date DATE NOT NULL, UNIQUE(userId, date));"
 )
 # Create trigger(s)
 cur.execute(
-    "CREATE TRIGGER IF NOT EXISTS limit_misc_rows_to_two BEFORE INSERT ON misc WHEN (SELECT COUNT(*) FROM misc) >= 2 BEGIN SELECT RAISE(ABORT, 'The misc table only has two rows at max'); END;"
+    "CREATE TRIGGER IF NOT EXISTS limit_misc_rows_to_two AFTER INSERT ON misc WHEN (SELECT COUNT(*) FROM misc) >= 2 BEGIN SELECT RAISE(ROLLBACK, 'The misc table only has two rows at max'); END;"
 )
 # pylint: enable=line-too-long
 
