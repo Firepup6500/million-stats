@@ -8,14 +8,14 @@
 		"start": "node api/app.js"
 	},
 	"dependencies": {
-		"@slack/bolt": "^3.22.0",
-		"dotenv": "^16.3.1",
-		"luxon": "^3.7.1",
-		"node-schedule": "^2.0.0",
+		"@slack/bolt": "^4.6.0",
+		"dotenv": "^17.3.1",
+		"luxon": "^3.7.2",
+		"node-schedule": "^2.1.1",
 		"sqlite3": "^5.1.7"
 	},
 	"engines": {
-		"node": "20.x"
+		"node": "24.x"
 	},
 	"repository": {
 		"url": "https://git.hackclub.app/firepup650/million-stats"
@@ -26,6 +26,6 @@
 		"express"
 	],
 	"devDependencies": {
-		"@biomejs/biome": "2.1.2"
+		"@biomejs/biome": "2.4.2"
 	}
 }
