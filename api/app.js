@@ -4,7 +4,7 @@ const { DateTime } = require("luxon");
 const { scheduleJob } = require("node-schedule");
 const { addQuote } = require("./quotes.js");
 
-require("dotenv").config();
+require("node:process").loadEnvFile();
 
 const db = new sql.Database("database.db");
 
