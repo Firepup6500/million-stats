@@ -551,7 +551,7 @@ app.event("app_mention", async (body) => {
 		console.info("INFO: Trying to startup...")
 		await app.start(port);
 		//await report(); // debugging
-		scheduleJob("0 0 * * *", report);
+		scheduleJob({ rule: "0 0 * * *", tz: "Etc/UTC" }, report);
 		publishInfo(`Started bot, listening on port ${port}`);
 	} catch (error) {
 		publishError(String(error), error);
