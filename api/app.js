@@ -388,7 +388,7 @@ function predictSpeed(goalDate, goalNumber, currentNumber) {
 	} else {
 		daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
 	}
-	const neededSpeed = (goalNumber - currentNumber) / Math.abs(daysRemaining);
+	const neededSpeed = Math.abs(goalNumber - currentNumber) / Math.abs(daysRemaining);
 	return [daysRemaining, neededSpeed];
 }
 
