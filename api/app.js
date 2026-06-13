@@ -317,18 +317,26 @@ async function report() {
 		// so Slack doesn't fail, just set the average to 0 if it's null
 		const averageSpeed = Math.max(0, (await getAverage()) ?? 0);
 		const pastThousandsGoal = Math.floor(latest / 1000) * 1000;
-		const [daysRemaining, predictedSpeed] = predictSpeed(
+		const [daysRemaining, neededSpeed] = predictSpeed(
 			goalDate,
 			goalNumber,
 			latest,
 		);
+		const absSpeed = Math.abs(neededSpeed);
+		let goalString;
+		if (neededSpeed < 0) {
+			goalString = `We've hit our goal! As a challenge, try to count at least *+${Math.ceil(absSpeed)}* today`
+		} else {
+			goalString = `If we want to get there on time, we need to count by at least *+${Math.ceil(absSpeed)}* a day`
+		}
+
 
 		const message = `Today we've went from *${oldest}* to *${latest}*!
 			- :arrow_upper_right: The day's progress: *+${diff}*
 			- :chart_with_upwards_trend: Average daily speed: *${Math.round(averageSpeed)}*
 			- :round_pushpin: Our current goal is to reach *${goalNumber}* by *${DateTime.fromJSDate(goalDate).toLocaleString(DateTime.DATE_MED)}.*
-			- :calendar: If we want to get there on time, we need to count by at least *+${Math.ceil(predictedSpeed)}* a day.
-			- :1234: Here's a number to aim for today: *${Math.ceil(latest + predictedSpeed)}*`;
+			- :calendar: ${goalString}
+			- :1234: Here's a number to aim for today: *${Math.ceil(latest + absSpeed)}*`;
 		if (pastThousandsGoal > oldest && pastThousandsGoal <= latest) {
 			const messageWithCelebration = `:tada: Congratulations! We've went past ${pastThousandsGoal}! :tada: \n${message}`;
 			await publishMessage(
@@ -336,14 +344,14 @@ async function report() {
 				addQuote(
 					messageWithCelebration,
 					daysRemaining,
-					predictedSpeed,
+					neededSpeed,
 					averageSpeed,
 				),
 			);
 		} else {
 			await publishMessage(
 				countChannel,
-				addQuote(message, daysRemaining, predictedSpeed, averageSpeed),
+				addQuote(message, daysRemaining, neededSpeed, averageSpeed),
 			);
 		}
 
@@ -388,7 +396,7 @@ function predictSpeed(goalDate, goalNumber, currentNumber) {
 	} else {
 		daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
 	}
-	const neededSpeed = Math.abs(goalNumber - currentNumber) / Math.abs(daysRemaining);
+	const neededSpeed = (goalNumber - currentNumber) / Math.abs(daysRemaining);
 	return [daysRemaining, neededSpeed];
 }
 
